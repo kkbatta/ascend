@@ -14,13 +14,14 @@ import {
   HelpCircle, 
   LogOut,
   BookOpen, 
-  Settings
+  Settings,
+  BarChart2
 } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 import { AscendLogo } from '@/components/dashboard/AscendLogo';
 import { MetricsCard } from '@/components/dashboard/MetricsCard';
 import { LeaderboardItem } from '@/components/dashboard/LeaderboardItem';
-import { BusinessValueChart } from '@/components/dashboard/BusinessValueChart';
 import { hierarchyMetrics, hierarchyData, businessValueData, currentUser } from '@/lib/mock-data';
 
 // Icon mapping for navigation items
@@ -34,11 +35,13 @@ const iconComponents = {
   BookOpen,
   HelpCircle,
   Settings,
-  LogOut
+  LogOut,
+  BarChart2
 };
 
 const navItems = [
-  { icon: 'BarChart3', label: 'Dashboard', active: true },
+  { icon: 'BarChart3', label: 'Dashboard', path: '/' },
+  { icon: 'BarChart2', label: 'Team Performance', path: '/team-performance' },
   { icon: 'FileText', label: 'Business' },
   { icon: 'Users', label: 'Associates' },
   { icon: 'Target', label: 'HGI Direct' },
@@ -51,6 +54,7 @@ const navItems = [
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [view, setView] = useState('recruiting');
+  const [location, setLocation] = useLocation();
 
   const currentMetrics = hierarchyMetrics[activeTab as keyof typeof hierarchyMetrics];
 
@@ -64,12 +68,13 @@ const Dashboard = () => {
         <nav className="mt-6 flex flex-col h-[calc(100vh-120px)]">
           {navItems.map((item, index) => {
             const IconComponent = iconComponents[item.icon as keyof typeof iconComponents];
+            const isActive = item.path ? location === item.path : false;
             return (
               <a
                 key={index}
-                href="#"
+                href={item.path || '#'}
                 className={`flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 ${
-                  item.active ? 'bg-blue-50 text-blue-600' : ''
+                  isActive ? 'bg-blue-50 text-blue-600' : ''
                 }`}
               >
                 <IconComponent size={20} />
@@ -117,17 +122,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-
-            {/* Business Value Tracking */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="text-xl">Business Value Tracking</CardTitle>
-                <p className="text-gray-500 text-sm">Track your progress towards annual target</p>
-              </CardHeader>
-              <CardContent>
-                <BusinessValueChart data={businessValueData} />
-              </CardContent>
-            </Card>
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
