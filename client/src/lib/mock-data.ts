@@ -1,3 +1,246 @@
+// Array definitions
+const randomNames = [
+  "James", "Mary", "John", "Patricia", "Michael", "Jennifer", "William", "Linda",
+  "David", "Elizabeth", "Richard", "Barbara", "Joseph", "Susan", "Thomas", "Jessica",
+  "Charles", "Sarah", "Christopher", "Karen", "Daniel", "Nancy", "Matthew", "Lisa",
+  "Anthony", "Margaret", "Mark", "Sandra", "Donald", "Ashley", "Steven", "Kimberly"
+];
+
+const randomLastNames = [
+  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
+  "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson",
+  "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson"
+];
+
+const randomOccupations = [
+  "Former Teacher", "Former Business Owner", "Former Engineer", "Former Doctor",
+  "Former Sales Executive", "Former Accountant", "Former Nurse", "Former Manager",
+  "Former Attorney", "Former Professor", "Former Consultant", "Former Architect"
+];
+
+const randomLocations = [
+  "New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Phoenix, AZ",
+  "Philadelphia, PA", "San Antonio, TX", "San Diego, CA", "Dallas, TX", "San Jose, CA"
+];
+
+const randomHealthStatus = ["Excellent", "Good", "Fair"];
+const randomRiskTolerances = ["Conservative", "Moderate", "Aggressive"];
+
+export const retirementProducts = [
+  {
+    id: 'annuity-fixed',
+    name: 'Fixed Annuity',
+    description: 'Guaranteed income stream with fixed interest rates',
+    minInvestment: 25000,
+    termOptions: [5, 10, 15, 20],
+    riskLevel: 'Low'
+  },
+  {
+    id: 'annuity-variable',
+    name: 'Variable Annuity',
+    description: 'Market-linked returns with optional income guarantees',
+    minInvestment: 50000,
+    termOptions: [10, 15, 20],
+    riskLevel: 'Moderate'
+  },
+  {
+    id: 'life-whole',
+    name: 'Whole Life Insurance',
+    description: 'Permanent life insurance with cash value component',
+    minCoverage: 100000,
+    cashValueGrowth: '2-4% annually',
+    riskLevel: 'Low'
+  },
+  {
+    id: 'ltc-insurance',
+    name: 'Long-Term Care Insurance',
+    description: 'Coverage for extended medical care needs',
+    coverageOptions: [100, 150, 200, 250],
+    waitingPeriod: '90 days',
+    riskLevel: 'Low'
+  },
+  {
+    id: 'income-fund',
+    name: 'Retirement Income Fund',
+    description: 'Diversified portfolio focused on income generation',
+    minInvestment: 10000,
+    expectedYield: '4-6% annually',
+    riskLevel: 'Moderate'
+  }
+];
+
+// Helper functions
+function shuffle(array: string[]): string[] {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function generateRandomPerformance(policyType: any, value: number, years: number) {
+  switch (policyType.id) {
+    case 'annuity-fixed':
+      return {
+        returnsToDate: Math.floor(value * 0.035 * years),
+        guaranteedRate: "3.5%",
+        nextRateAdjustment: "2024-12-31"
+      };
+    case 'annuity-variable':
+      return {
+        returnsToDate: Math.floor(value * (0.04 + Math.random() * 0.06) * years),
+        annualReturn: `${(4 + Math.random() * 6).toFixed(1)}%`,
+        riskProfile: "Moderate"
+      };
+    default:
+      return {
+        returnsToDate: Math.floor(value * 0.02 * years),
+        premiumsPaid: Math.floor(value * 0.05),
+        coverageUtilization: 0
+      };
+  }
+}
+
+function generateRandomPolicies() {
+  const numPolicies = 1 + Math.floor(Math.random() * 3); // 1-3 policies
+  const policies = [];
+
+  for (let i = 0; i < numPolicies; i++) {
+    const policyType = retirementProducts[Math.floor(Math.random() * retirementProducts.length)];
+    const startYear = 2010 + Math.floor(Math.random() * 13); // 2010-2023
+    const value = 100000 + Math.floor(Math.random() * 400000);
+
+    policies.push({
+      id: `pol-${Math.random().toString(36).substr(2, 9)}`,
+      type: policyType.name,
+      startDate: `${startYear}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+      value,
+      status: "Active",
+      performance: generateRandomPerformance(policyType, value, 2024 - startYear)
+    });
+  }
+
+  return policies;
+}
+
+function generateRandomInterests() {
+  const allInterests = [
+    "Travel", "Golf", "Gardening", "Reading", "Volunteering", "Grandchildren",
+    "Hiking", "Photography", "Cooking", "Music", "Art", "Bridge"
+  ];
+
+  return shuffle(allInterests).slice(0, 2 + Math.floor(Math.random() * 3));
+}
+
+function generateRandomConcerns() {
+  const allConcerns = [
+    "Healthcare costs", "Market volatility", "Inflation", "Long-term care",
+    "Legacy planning", "Tax efficiency", "Social Security", "Medicare coverage"
+  ];
+
+  return shuffle(allConcerns).slice(0, 2 + Math.floor(Math.random() * 3));
+}
+
+// Initial customer data
+export const retiredCustomers = [
+  {
+    id: 1,
+    name: "Robert Chen",
+    age: 68,
+    retirementYear: 2022,
+    spouse: {
+      name: "Linda Chen",
+      age: 65
+    },
+    netWorth: 1250000,
+    occupation: "Former Software Executive",
+    location: "San Francisco, CA",
+    healthStatus: "Excellent",
+    riskTolerance: "Moderate",
+    pastPolicies: [
+      {
+        id: "pol-1",
+        type: "Term Life Insurance",
+        startDate: "2010-05-15",
+        value: 500000,
+        status: "Active",
+        performance: {
+          returnsToDate: 0,
+          premiumsPaid: 45000,
+          coverageUtilization: 0
+        }
+      },
+      {
+        id: "pol-2",
+        type: "Variable Annuity",
+        startDate: "2015-08-22",
+        value: 300000,
+        status: "Active",
+        performance: {
+          returnsToDate: 68000,
+          annualReturn: "7.2%",
+          riskProfile: "Moderate"
+        }
+      }
+    ],
+    interests: ["Travel", "Golf", "Grandchildren"],
+    concerns: ["Healthcare costs", "Legacy planning", "Market volatility"]
+  },
+  {
+    id: 2,
+    name: "Margaret Thompson",
+    age: 72,
+    retirementYear: 2018,
+    spouse: null,
+    netWorth: 850000,
+    occupation: "Former School Principal",
+    location: "Portland, OR",
+    healthStatus: "Good",
+    riskTolerance: "Conservative",
+    pastPolicies: [
+      {
+        id: "pol-3",
+        type: "Fixed Annuity",
+        startDate: "2018-03-10",
+        value: 200000,
+        status: "Active",
+        performance: {
+          returnsToDate: 24000,
+          guaranteedRate: "3.5%",
+          nextRateAdjustment: "2024-03-10"
+        }
+      }
+    ],
+    interests: ["Gardening", "Book club", "Volunteering"],
+    concerns: ["Longevity risk", "Inflation", "Long-term care"]
+  }
+];
+
+// Generate additional customers
+[...Array(48)].forEach((_, index) => {
+  const age = 65 + Math.floor(Math.random() * 20); // Ages 65-85
+  const hasSpouse = Math.random() > 0.3; // 70% chance of having a spouse
+  const spouseAge = age - Math.floor(Math.random() * 8) + Math.floor(Math.random() * 8);
+  const netWorthBase = 500000 + Math.floor(Math.random() * 2000000);
+
+  const customer = {
+    id: index + 3,
+    name: `${randomNames[Math.floor(Math.random() * randomNames.length)]} ${randomLastNames[Math.floor(Math.random() * randomLastNames.length)]}`,
+    age,
+    retirementYear: 2024 - Math.floor(Math.random() * 10),
+    spouse: hasSpouse ? {
+      name: `${randomNames[Math.floor(Math.random() * randomNames.length)]} ${randomLastNames[Math.floor(Math.random() * randomLastNames.length)]}`,
+      age: spouseAge
+    } : null,
+    netWorth: netWorthBase,
+    occupation: randomOccupations[Math.floor(Math.random() * randomOccupations.length)],
+    location: randomLocations[Math.floor(Math.random() * randomLocations.length)],
+    healthStatus: randomHealthStatus[Math.floor(Math.random() * randomHealthStatus.length)],
+    riskTolerance: randomRiskTolerances[Math.floor(Math.random() * randomRiskTolerances.length)],
+    pastPolicies: generateRandomPolicies(),
+    interests: generateRandomInterests(),
+    concerns: generateRandomConcerns()
+  };
+
+  retiredCustomers.push(customer);
+});
+
 export const hierarchyMetrics = {
   personal: {
     teamSize: 45,
