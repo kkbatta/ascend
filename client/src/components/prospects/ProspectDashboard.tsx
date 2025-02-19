@@ -22,7 +22,7 @@ const ProspectDashboard = () => {
     { 
       id: 'bop', 
       name: 'BOP', 
-      color: 'bg-blue-100 border-blue-500',
+      color: 'bg-blue-100 border-gray-500',
       textColor: 'text-blue-700',
       description: 'Basic Opportunity Profile'
     },
@@ -83,48 +83,46 @@ const ProspectDashboard = () => {
   }));
 
   const ProspectCard = ({ prospect, stageColor, stageTextColor }) => (
-    <Card className="mb-4 hover:shadow-lg transition-all cursor-pointer border-l-4">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Avatar className="w-10 h-10">
-              <img src={prospect.avatar} alt={prospect.name} />
-            </Avatar>
-            <div>
-              <h3 className="font-semibold flex items-center gap-2">
-                {prospect.name}
-                {prospect.potential >= 75 && (
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                )}
-              </h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span>{prospect.lastContact}</span>
+    <Card className="mb-3 hover:shadow-lg transition-all cursor-pointer border-l-4 w-full">
+      <CardContent className="p-3">
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <Avatar className="w-8 h-8">
+                <img src={prospect.avatar} alt={prospect.name} className="w-full h-full object-cover" />
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-sm flex items-center gap-1">
+                  {prospect.name}
+                  {prospect.potential >= 75 && (
+                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                  )}
+                </h3>
+                <div className="text-xs text-gray-500">
+                  {prospect.lastContact}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <div className="text-sm font-medium">
-              Potential Score
-            </div>
-            <Badge className={stageTextColor}>
+            <Badge className={`${stageTextColor} text-xs`}>
               {prospect.potential}%
             </Badge>
           </div>
-        </div>
-        <div className="mt-3 flex justify-between items-center">
-          <div className="text-sm text-gray-500">
-            {prospect.nextAction}
-          </div>
-          <div className="flex gap-2">
-            <button className="p-1 hover:bg-gray-100 rounded">
-              <Phone className="w-4 h-4 text-gray-500" />
-            </button>
-            <button className="p-1 hover:bg-gray-100 rounded">
-              <Mail className="w-4 h-4 text-gray-500" />
-            </button>
-            <button className="p-1 hover:bg-gray-100 rounded">
-              <Calendar className="w-4 h-4 text-gray-500" />
-            </button>
+
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-500">
+              {prospect.nextAction}
+            </span>
+            <div className="flex gap-1">
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <Phone className="w-3 h-3 text-gray-500" />
+              </button>
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <Mail className="w-3 h-3 text-gray-500" />
+              </button>
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <Calendar className="w-3 h-3 text-gray-500" />
+              </button>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -132,9 +130,9 @@ const ProspectDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-[1800px] mx-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-2xl font-bold">Prospect Pipeline</h1>
             <p className="text-gray-500">Manage prospects through different stages</p>
@@ -155,19 +153,23 @@ const ProspectDashboard = () => {
         </div>
 
         {/* Stage Columns */}
-        <div className="grid grid-cols-7 gap-4 mt-8">
+        <div className="grid grid-cols-7 gap-4 h-[calc(100vh-130px)] overflow-hidden">
           {stages.map(stage => (
-            <div key={stage.id} className="flex flex-col">
-              <div className={`p-4 rounded-t-lg ${stage.color}`}>
+            <div key={stage.id} className="flex flex-col min-w-[250px]">
+              <div className={`p-3 rounded-t-lg ${stage.color}`}>
                 <div className="flex justify-between items-center mb-1">
-                  <h3 className={`font-semibold ${stage.textColor}`}>{stage.name}</h3>
-                  <Badge variant="secondary" className={stage.textColor}>
+                  <h3 className={`font-semibold ${stage.textColor} text-sm`}>{stage.name}</h3>
+                  <Badge variant="secondary" className={`${stage.textColor} text-xs`}>
                     {prospects.filter(p => p.stage === stage.id).length}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600">{stage.description}</p>
+                <p className="text-xs text-gray-600">{stage.description}</p>
               </div>
-              <div className={`p-4 bg-gray-50 rounded-b-lg flex-1 min-h-[calc(100vh-250px)] ${stage.id === 'confidential' ? 'bg-amber-50/50' : ''}`}>
+              <div 
+                className={`p-2 bg-gray-50 rounded-b-lg flex-1 overflow-y-auto
+                  ${stage.id === 'confidential' ? 'bg-amber-50/50' : ''}
+                  scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent`}
+              >
                 {prospects
                   .filter(prospect => prospect.stage === stage.id)
                   .map(prospect => (
