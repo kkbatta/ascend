@@ -84,10 +84,11 @@ const prospects = Array.from({ length: 15 }, (_, i) => ({
   potential: Math.floor(Math.random() * 50 + 50),
   lastContact: ['2 days ago', '1 week ago', 'Yesterday', '3 days ago'][Math.floor(Math.random() * 4)],
   nextAction: ['Follow-up call', 'Financial review', 'Send proposal', 'Schedule meeting'][Math.floor(Math.random() * 4)],
-  avatar: `/api/placeholder/48/48?text=${[
+  // Use Dicebear's avatars API for better looking, deterministic avatars
+  avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent([
     'ET', 'MC', 'SR', 'DK', 'RP', 'JW', 'MG', 'WL', 'JS', 'RJ',
     'LA', 'KP', 'DM', 'TW', 'AL'
-  ][i]}`
+  ][i])}&backgroundColor=b6e3f4,c0aede,d1d4f9`
 }));
 
 const ProspectCard = ({ prospect, stageColor, stageTextColor }) => {
