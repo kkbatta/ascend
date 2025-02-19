@@ -42,40 +42,75 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-const filterOrgData = (
+const findMemberByName = (
   data: OrgMember,
-  filterDesignation: string,
-  searchQuery: string
+  searchQuery: string,
+  filterDesignation: string
 ): OrgMember | null => {
   const matchesSearch = searchQuery
     ? data.name.toLowerCase().includes(searchQuery.toLowerCase())
     : true;
   const matchesDesignation = filterDesignation === 'All' || data.designation === filterDesignation;
 
-  // If this node matches both filters, include it and all its descendants
+  // If this node matches both criteria, return it
   if (matchesSearch && matchesDesignation) {
-    return {
-      ...data,
-      children: data.children?.map(child => filterOrgData(child, filterDesignation, searchQuery)).filter(child => child !== null)
-    };
+    return data;
   }
 
-  // If this node doesn't match but has children, check children
+  // If not found in current node, search children
   if (data.children) {
-    const filteredChildren = data.children
-      .map(child => filterOrgData(child, filterDesignation, searchQuery))
-      .filter((child): child is OrgMember => child !== null);
-
-    if (filteredChildren.length > 0) {
-      return {
-        ...data,
-        children: filteredChildren
-      };
+    for (const child of data.children) {
+      const found = findMemberByName(child, searchQuery, filterDesignation);
+      if (found) {
+        return found;
+      }
     }
   }
 
-  // If neither this node nor its children match, exclude this branch
   return null;
+};
+
+const filterOrgData = (
+  data: OrgMember,
+  filterDesignation: string,
+  searchQuery: string
+): OrgMember | null => {
+  // If there's a search query, find the matching member and show their org structure
+  if (searchQuery) {
+    const foundMember = findMemberByName(data, searchQuery, filterDesignation);
+    if (foundMember) {
+      return foundMember;
+    }
+    return null;
+  }
+
+  // If only filtering by designation
+  const matchesDesignation = filterDesignation === 'All' || data.designation === filterDesignation;
+
+  if (!matchesDesignation) {
+    // If this node doesn't match designation but has children, check children
+    if (data.children) {
+      const filteredChildren = data.children
+        .map(child => filterOrgData(child, filterDesignation, searchQuery))
+        .filter((child): child is OrgMember => child !== null);
+
+      if (filteredChildren.length > 0) {
+        return {
+          ...data,
+          children: filteredChildren
+        };
+      }
+    }
+    return null;
+  }
+
+  // Include this node and filter its children
+  return {
+    ...data,
+    children: data.children
+      ?.map(child => filterOrgData(child, filterDesignation, searchQuery))
+      .filter((child): child is OrgMember => child !== null)
+  };
 };
 
 const MemberNode: React.FC<{
@@ -162,7 +197,7 @@ const MemberNode: React.FC<{
         <div className="relative mt-8">
           <div className="absolute left-1/2 top-0 -translate-x-1/2 w-0.5 h-8 bg-gray-300 shadow-sm"></div>
           <div className="relative flex gap-12 pt-8">
-            {member.children.map((child, index, array) => (
+            {member.children?.map((child, index, array) => (
               <div key={child.id} className="relative">
                 {array.length > 1 && (
                   <>
