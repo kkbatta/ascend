@@ -23,12 +23,38 @@ export const OrgRevenueReport = () => {
   const { data: orgRevenue = [] } = useQuery({
     queryKey: ['organizationRevenue', dateRange],
     queryFn: async () => {
-      const response = await fetch(`/api/reports/org-revenue?` + new URLSearchParams({
-        from: dateRange.from.toISOString(),
-        to: dateRange.to.toISOString()
-      }));
-      if (!response.ok) throw new Error('Failed to fetch organization revenue');
-      return response.json();
+      // In a real app, this would be an API call
+      // For now, we'll return mock data based on our organization structure
+      return [
+        {
+          name: 'RMD Super Base',
+          revenue: 8850000,
+          commissions: 2655000,
+          newPolicies: 1250000,
+          renewals: 4945000
+        },
+        {
+          name: 'RMD Base Shop',
+          revenue: 2485000,
+          commissions: 745500,
+          newPolicies: 850000,
+          renewals: 889500
+        },
+        {
+          name: 'Base Shop',
+          revenue: 568000,
+          commissions: 170400,
+          newPolicies: 225000,
+          renewals: 172600
+        },
+        {
+          name: 'Personal Team',
+          revenue: 95000,
+          commissions: 28500,
+          newPolicies: 45000,
+          renewals: 21500
+        }
+      ];
     }
   });
 
@@ -41,7 +67,11 @@ export const OrgRevenueReport = () => {
         <div className="space-y-4">
           <DatePickerWithRange
             date={dateRange}
-            onSelect={setDateRange}
+            onSelect={(range) => {
+              if (range?.from && range?.to) {
+                setDateRange({ from: range.from, to: range.to });
+              }
+            }}
           />
 
           <div className="h-[400px]">
