@@ -1,5 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   BarChart,
   Bar,
@@ -15,7 +23,7 @@ import {
   Line,
   Legend
 } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, Users, Clock, Target } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Users, Clock, Target, Bot, Send } from 'lucide-react';
 
 // Mock data - will be replaced with real data from API
 const stageConversionData = [
@@ -49,35 +57,143 @@ const potentialDistributionData = [
   { name: 'Low', value: 25, color: '#ef4444' },
 ];
 
-const MetricCard = ({ title, value, trend, icon: Icon }) => (
-  <Card>
-    <CardContent className="pt-6">
-      <div className="flex justify-between items-start">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+const AgentDialog = ({ isOpen, onClose, metricTitle, metricValue, trend }) => {
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: `I've analyzed the ${metricTitle.toLowerCase()} metrics. What would you like to know about the current performance?`
+    }
+  ]);
+  const [input, setInput] = useState('');
+
+  const mockResponses = {
+    'Active Prospects': [
+      "Based on the current number of prospects (245), I recommend focusing on the following:\n\n1. Implement a weekly check-in schedule for prospects in later stages\n2. Consider automated nurture campaigns for early-stage prospects\n3. Your 12% increase is promising, but there's room for better qualification",
+      "Looking at the prospect distribution, here's what we can improve:\n\n1. Set up automated follow-up sequences\n2. Implement a lead scoring system\n3. Focus on quality over quantity in prospect acquisition",
+    ],
+    'Avg. Conversion Time': [
+      "The current 45-day conversion cycle could be optimized by:\n\n1. Identifying bottlenecks in the Financial Review stage\n2. Streamlining the documentation process\n3. Setting up automated reminders for next steps",
+      "To improve the conversion time, consider:\n\n1. Creating stage-specific content resources\n2. Implementing a fast-track program for high-potential prospects\n3. Regular pipeline review meetings",
+    ],
+    'Conversion Rate': [
+      "Your 32% conversion rate shows promise. Here's how to improve:\n\n1. Focus on prospects with scores above 75\n2. Implement a referral program\n3. Create success story showcases",
+      "To boost the conversion rate further:\n\n1. Analyze successful conversions for common patterns\n2. Develop targeted training materials\n3. Set up milestone-based engagement programs",
+    ]
+  };
+
+  const sendMessage = () => {
+    if (!input.trim()) return;
+
+    const newMessages = [
+      ...messages,
+      { role: 'user', content: input },
+    ];
+    setMessages(newMessages);
+    setInput('');
+
+    // Simulate AI response
+    setTimeout(() => {
+      const responses = mockResponses[metricTitle];
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      setMessages([...newMessages, { role: 'assistant', content: randomResponse }]);
+    }, 1000);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Bot className="w-5 h-5" />
+            AI Analysis: {metricTitle}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col h-[400px]">
+          <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-4 bg-gray-50 rounded-lg">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[80%] p-3 rounded-lg ${
+                    message.role === 'user'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white border'
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-line">{message.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about this metric..."
+              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            />
+            <Button onClick={sendMessage}>
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-        <div className="p-2 bg-gray-100 rounded-full">
-          <Icon className="w-4 h-4 text-gray-600" />
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const MetricCard = ({ title, value, trend, icon: Icon }) => {
+  const [isAgentOpen, setIsAgentOpen] = useState(false);
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-500">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+          </div>
+          <div className="flex gap-2">
+            <div className="p-2 bg-gray-100 rounded-full">
+              <Icon className="w-4 h-4 text-gray-600" />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsAgentOpen(true)}
+              className="rounded-full"
+            >
+              <Bot className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
-      {trend && (
-        <div className="mt-4 flex items-center space-x-2">
-          {trend > 0 ? (
-            <ArrowUpRight className="w-4 h-4 text-green-500" />
-          ) : (
-            <ArrowDownRight className="w-4 h-4 text-red-500" />
-          )}
-          <span className={`text-sm font-medium ${
-            trend > 0 ? 'text-green-500' : 'text-red-500'
-          }`}>
-            {Math.abs(trend)}% vs last month
-          </span>
-        </div>
-      )}
-    </CardContent>
-  </Card>
-);
+        {trend && (
+          <div className="mt-4 flex items-center space-x-2">
+            {trend > 0 ? (
+              <ArrowUpRight className="w-4 h-4 text-green-500" />
+            ) : (
+              <ArrowDownRight className="w-4 h-4 text-red-500" />
+            )}
+            <span className={`text-sm font-medium ${
+              trend > 0 ? 'text-green-500' : 'text-red-500'
+            }`}>
+              {Math.abs(trend)}% vs last month
+            </span>
+          </div>
+        )}
+        <AgentDialog
+          isOpen={isAgentOpen}
+          onClose={() => setIsAgentOpen(false)}
+          metricTitle={title}
+          metricValue={value}
+          trend={trend}
+        />
+      </CardContent>
+    </Card>
+  );
+};
 
 export const ProspectAnalytics = () => {
   return (
@@ -142,8 +258,8 @@ export const ProspectAnalytics = () => {
                   margin={{ top: 5, right: 30, left: 20, bottom: 50 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="name" 
+                  <XAxis
+                    dataKey="name"
                     angle={-45}
                     textAnchor="end"
                     height={80}
@@ -172,7 +288,7 @@ export const ProspectAnalytics = () => {
                     cy="50%"
                     outerRadius={100}
                     dataKey="value"
-                    label={({ name, percent }) => 
+                    label={({ name, percent }) =>
                       `${name} ${(percent * 100).toFixed(0)}%`
                     }
                   >
