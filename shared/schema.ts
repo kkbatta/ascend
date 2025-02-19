@@ -81,9 +81,68 @@ export const insertTeamStatsSchema = createInsertSchema(teamStats).omit({
   updatedAt: true,
 });
 
+export const prospects = pgTable("prospects", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  location: text("location"),
+  stage: text("stage").notNull(),
+  potentialScore: integer("potential_score"),
+  assignedTo: integer("assigned_to").references(() => orgMembers.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const prospectActivities = pgTable("prospect_activities", {
+  id: serial("id").primaryKey(),
+  prospectId: integer("prospect_id").references(() => prospects.id).notNull(),
+  type: text("type").notNull(), 
+  title: text("title").notNull(),
+  description: text("description"),
+  scheduledAt: timestamp("scheduled_at"),
+  completedAt: timestamp("completed_at"),
+  createdBy: integer("created_by").references(() => orgMembers.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const prospectRelations = relations(prospects, ({ one, many }) => ({
+  assignedMember: one(orgMembers, {
+    fields: [prospects.assignedTo],
+    references: [orgMembers.id],
+  }),
+  activities: many(prospectActivities),
+}));
+
+export const prospectActivityRelations = relations(prospectActivities, ({ one }) => ({
+  prospect: one(prospects, {
+    fields: [prospectActivities.prospectId],
+    references: [prospects.id],
+  }),
+  creator: one(orgMembers, {
+    fields: [prospectActivities.createdBy],
+    references: [orgMembers.id],
+  }),
+}));
+
+export const insertProspectSchema = createInsertSchema(prospects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProspectActivitySchema = createInsertSchema(prospectActivities).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertOrgMember = z.infer<typeof insertOrgMemberSchema>;
 export type OrgMember = typeof orgMembers.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type TeamStats = typeof teamStats.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertProspect = z.infer<typeof insertProspectSchema>;
+export type Prospect = typeof prospects.$inferSelect;
+export type ProspectActivity = typeof prospectActivities.$inferSelect;
+export type InsertProspectActivity = z.infer<typeof insertProspectActivitySchema>;
