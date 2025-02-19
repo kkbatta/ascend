@@ -16,6 +16,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Link } from "wouter";
+import { ProspectNotesDocs } from './ProspectNotesDocs';
 
 // Define stages with their colors and descriptions
 const stages = [
@@ -175,18 +176,22 @@ const ProspectCard = ({ prospect, stageColor, stageTextColor }) => {
           </div>
 
           <CollapsibleContent>
-            <div className="mt-3 pt-3 border-t">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="text-sm font-medium">Activity Timeline</h4>
-                <Button variant="outline" size="sm" className="h-7 text-xs">
-                  <Plus className="w-3 h-3 mr-1" />
-                  Add Activity
-                </Button>
+            <div className="mt-3 pt-3 border-t space-y-6">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-sm font-medium">Activity Timeline</h4>
+                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add Activity
+                  </Button>
+                </div>
+                <ProspectTimeline 
+                  activities={mockActivities}
+                  className="max-h-[300px] overflow-y-auto pr-2"
+                />
               </div>
-              <ProspectTimeline 
-                activities={mockActivities}
-                className="max-h-[300px] overflow-y-auto pr-2"
-              />
+
+              <ProspectNotesDocs prospectId={prospect.id} />
             </div>
           </CollapsibleContent>
         </CardContent>

@@ -97,7 +97,7 @@ export const prospects = pgTable("prospects", {
 export const prospectActivities = pgTable("prospect_activities", {
   id: serial("id").primaryKey(),
   prospectId: integer("prospect_id").references(() => prospects.id).notNull(),
-  type: text("type").notNull(), 
+  type: text("type").notNull(),
   title: text("title").notNull(),
   description: text("description"),
   scheduledAt: timestamp("scheduled_at"),
@@ -106,12 +106,34 @@ export const prospectActivities = pgTable("prospect_activities", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const prospectNotes = pgTable("prospect_notes", {
+  id: serial("id").primaryKey(),
+  prospectId: integer("prospect_id").references(() => prospects.id).notNull(),
+  content: text("content").notNull(),
+  createdBy: integer("created_by").references(() => orgMembers.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const prospectDocuments = pgTable("prospect_documents", {
+  id: serial("id").primaryKey(),
+  prospectId: integer("prospect_id").references(() => prospects.id).notNull(),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  storageKey: text("storage_key").notNull(),
+  uploadedBy: integer("uploaded_by").references(() => orgMembers.id),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
 export const prospectRelations = relations(prospects, ({ one, many }) => ({
   assignedMember: one(orgMembers, {
     fields: [prospects.assignedTo],
     references: [orgMembers.id],
   }),
   activities: many(prospectActivities),
+  notes: many(prospectNotes),
+  documents: many(prospectDocuments),
 }));
 
 export const prospectActivityRelations = relations(prospectActivities, ({ one }) => ({
@@ -136,6 +158,17 @@ export const insertProspectActivitySchema = createInsertSchema(prospectActivitie
   createdAt: true,
 });
 
+export const insertProspectNoteSchema = createInsertSchema(prospectNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProspectDocumentSchema = createInsertSchema(prospectDocuments).omit({
+  id: true,
+  uploadedAt: true,
+});
+
 export type InsertOrgMember = z.infer<typeof insertOrgMemberSchema>;
 export type OrgMember = typeof orgMembers.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
@@ -146,3 +179,7 @@ export type InsertProspect = z.infer<typeof insertProspectSchema>;
 export type Prospect = typeof prospects.$inferSelect;
 export type ProspectActivity = typeof prospectActivities.$inferSelect;
 export type InsertProspectActivity = z.infer<typeof insertProspectActivitySchema>;
+export type ProspectNote = typeof prospectNotes.$inferSelect;
+export type InsertProspectNote = z.infer<typeof insertProspectNoteSchema>;
+export type ProspectDocument = typeof prospectDocuments.$inferSelect;
+export type InsertProspectDocument = z.infer<typeof insertProspectDocumentSchema>;

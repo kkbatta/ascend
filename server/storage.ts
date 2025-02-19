@@ -6,12 +6,18 @@ import {
   teamStats,
   achievements,
   memberAchievements,
+  prospectNotes,
+  prospectDocuments,
   type User,
   type InsertUser,
   type OrgMember,
   type InsertOrgMember,
   type TeamStats,
-  type Achievement
+  type Achievement,
+  type ProspectNote,
+  type InsertProspectNote,
+  type ProspectDocument,
+  type InsertProspectDocument
 } from "@shared/schema";
 
 export interface IStorage {
@@ -35,6 +41,15 @@ export interface IStorage {
   getAchievements(): Promise<Achievement[]>;
   getMemberAchievements(memberId: number): Promise<Achievement[]>;
   addMemberAchievement(memberId: number, achievementId: number): Promise<void>;
+
+  // Prospect notes operations
+  getProspectNotes(prospectId: number): Promise<ProspectNote[]>;
+  createProspectNote(note: InsertProspectNote): Promise<ProspectNote>;
+
+  // Prospect documents operations
+  getProspectDocuments(prospectId: number): Promise<ProspectDocument[]>;
+  createProspectDocument(document: InsertProspectDocument): Promise<ProspectDocument>;
+  getProspectDocument(id: number): Promise<ProspectDocument | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -107,6 +122,48 @@ export class DatabaseStorage implements IStorage {
       memberId,
       achievementId,
     });
+  }
+
+  // Prospect notes methods
+  async getProspectNotes(prospectId: number): Promise<ProspectNote[]> {
+    return await db
+      .select()
+      .from(prospectNotes)
+      .where(eq(prospectNotes.prospectId, prospectId))
+      .orderBy(prospectNotes.createdAt);
+  }
+
+  async createProspectNote(note: InsertProspectNote): Promise<ProspectNote> {
+    const [newNote] = await db
+      .insert(prospectNotes)
+      .values(note)
+      .returning();
+    return newNote;
+  }
+
+  // Prospect documents methods
+  async getProspectDocuments(prospectId: number): Promise<ProspectDocument[]> {
+    return await db
+      .select()
+      .from(prospectDocuments)
+      .where(eq(prospectDocuments.prospectId, prospectId))
+      .orderBy(prospectDocuments.uploadedAt);
+  }
+
+  async createProspectDocument(document: InsertProspectDocument): Promise<ProspectDocument> {
+    const [newDocument] = await db
+      .insert(prospectDocuments)
+      .values(document)
+      .returning();
+    return newDocument;
+  }
+
+  async getProspectDocument(id: number): Promise<ProspectDocument | undefined> {
+    const [document] = await db
+      .select()
+      .from(prospectDocuments)
+      .where(eq(prospectDocuments.id, id));
+    return document;
   }
 }
 
