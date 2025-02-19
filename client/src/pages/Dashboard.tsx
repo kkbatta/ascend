@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Avatar } from '@/components/ui/avatar';
-import { 
-  Users, 
-  Search, 
-  DollarSign, 
+import {
+  Users,
+  Search,
+  DollarSign,
   BarChart3,
 } from 'lucide-react';
 
 import { MetricsCard } from '@/components/dashboard/MetricsCard';
 import { LeaderboardItem } from '@/components/dashboard/LeaderboardItem';
-import { hierarchyMetrics, hierarchyData, currentUser } from '@/lib/mock-data';
+import { hierarchyMetrics, hierarchyData, currentUser, teamMemberStats, achievements } from '@/lib/mock-data';
+import { GamifiedLeaderboard } from '@/components/dashboard/GamifiedLeaderboard';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -85,8 +86,8 @@ const Dashboard = () => {
               <div className="flex gap-4">
                 <button
                   className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                    view === 'recruiting' 
-                      ? 'bg-blue-500 text-white shadow-md' 
+                    view === 'recruiting'
+                      ? 'bg-blue-500 text-white shadow-md'
                       : 'bg-gray-100 hover:bg-gray-200'
                   }`}
                   onClick={() => setView('recruiting')}
@@ -95,8 +96,8 @@ const Dashboard = () => {
                 </button>
                 <button
                   className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                    view === 'production' 
-                      ? 'bg-blue-500 text-white shadow-md' 
+                    view === 'production'
+                      ? 'bg-blue-500 text-white shadow-md'
                       : 'bg-gray-100 hover:bg-gray-200'
                   }`}
                   onClick={() => setView('production')}
@@ -113,6 +114,7 @@ const Dashboard = () => {
                 <TabsTrigger value="baseShop">Base Shop</TabsTrigger>
                 <TabsTrigger value="rmdBase">RMD Base Shop</TabsTrigger>
                 <TabsTrigger value="superBase">RMD Super Base</TabsTrigger>
+                <TabsTrigger value="performance">Performance</TabsTrigger>
               </TabsList>
               <TabsContent value={activeTab}>
                 <div className="space-y-4">
@@ -120,6 +122,12 @@ const Dashboard = () => {
                     <LeaderboardItem key={item.id} item={item} view={view as 'recruiting' | 'production'} />
                   ))}
                 </div>
+              </TabsContent>
+              <TabsContent value="performance">
+                <GamifiedLeaderboard
+                  teamMember={teamMemberStats[1]}
+                  achievements={achievements}
+                />
               </TabsContent>
             </Tabs>
           </CardContent>

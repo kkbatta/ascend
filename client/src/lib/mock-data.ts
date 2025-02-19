@@ -152,3 +152,154 @@ export const prospects = [
     currentInvestments: ['Tech company RSUs', 'Cryptocurrency']
   }
 ];
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  type: 'sales' | 'recruiting' | 'training' | 'engagement';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+export interface TeamMemberStats extends User {
+  points: number;
+  achievements: string[];
+  streak: number;
+  weeklyRank: number;
+  monthlyRank: number;
+  recentMilestones: {
+    type: string;
+    value: number;
+    date: string;
+  }[];
+  challenges: {
+    id: string;
+    progress: number;
+    target: number;
+    endDate: string;
+  }[];
+}
+
+export const achievements: Achievement[] = [
+  {
+    id: 'fast-starter',
+    name: 'Fast Starter',
+    description: 'Achieved 5 sales in your first month',
+    icon: 'Zap',
+    type: 'sales',
+    rarity: 'common'
+  },
+  {
+    id: 'team-builder',
+    name: 'Team Builder',
+    description: 'Recruited 3 new team members in a month',
+    icon: 'Users',
+    type: 'recruiting',
+    rarity: 'rare'
+  },
+  {
+    id: 'elite-performer',
+    name: 'Elite Performer',
+    description: 'Maintained top 5 ranking for 3 consecutive months',
+    icon: 'Award',
+    type: 'sales',
+    rarity: 'epic'
+  },
+  {
+    id: 'master-mentor',
+    name: 'Master Mentor',
+    description: 'Helped 5 team members achieve their monthly goals',
+    icon: 'Star',
+    type: 'training',
+    rarity: 'legendary'
+  }
+];
+
+export const weeklyChallenge = {
+  id: 'weekly-sprint-23',
+  title: 'February Sprint Challenge',
+  description: 'Achieve 150% of your monthly sales target',
+  reward: {
+    points: 1000,
+    badge: 'Sprint Champion'
+  },
+  leaderboard: [
+    {
+      id: 1,
+      name: 'Thomas Anderson',
+      progress: 85,
+      points: 850,
+      rank: 1
+    },
+    {
+      id: 2,
+      name: 'Sarah Connor',
+      progress: 75,
+      points: 750,
+      rank: 2
+    }
+  ]
+};
+
+export const teamMemberStats: Record<number, TeamMemberStats> = {
+  1: {
+    id: 1,
+    name: 'Thomas Anderson',
+    points: 2500,
+    achievements: ['fast-starter', 'team-builder'],
+    streak: 5,
+    weeklyRank: 1,
+    monthlyRank: 2,
+    recentMilestones: [
+      {
+        type: 'sales',
+        value: 100000,
+        date: '2025-02-15'
+      },
+      {
+        type: 'recruiting',
+        value: 3,
+        date: '2025-02-10'
+      }
+    ],
+    challenges: [
+      {
+        id: 'weekly-sprint-23',
+        progress: 85,
+        target: 100,
+        endDate: '2025-02-25'
+      }
+    ]
+  },
+  2: {
+    id: 2,
+    name: 'Sarah Connor',
+    points: 2200,
+    achievements: ['fast-starter', 'elite-performer'],
+    streak: 3,
+    weeklyRank: 2,
+    monthlyRank: 1,
+    recentMilestones: [
+      {
+        type: 'sales',
+        value: 150000,
+        date: '2025-02-14'
+      }
+    ],
+    challenges: [
+      {
+        id: 'weekly-sprint-23',
+        progress: 75,
+        target: 100,
+        endDate: '2025-02-25'
+      }
+    ]
+  }
+};
+
+// This is a placeholder.  Replace with your actual User interface
+interface User {
+  id: number;
+  name: string;
+}
