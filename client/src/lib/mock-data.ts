@@ -116,3 +116,39 @@ export const navItems = [
   { icon: 'BookOpen', label: 'Resources' },
   { icon: 'HelpCircle', label: 'Help Center' }
 ];
+
+export const prospects = [
+  {
+    id: 1,
+    name: 'Michael Chen',
+    age: 42,
+    occupation: 'Small Business Owner',
+    familyStatus: 'Married with 2 kids (ages 8 and 10)',
+    income: 120000,
+    goals: ['Business protection', 'Children\'s education', 'Retirement planning'],
+    riskTolerance: 'Moderate',
+    currentInvestments: ['401k', 'Real estate']
+  },
+  {
+    id: 2,
+    name: 'Sarah Rodriguez',
+    age: 58,
+    occupation: 'Senior Manager',
+    familyStatus: 'Single',
+    income: 150000,
+    goals: ['Retirement security', 'Estate planning', 'Tax optimization'],
+    riskTolerance: 'Conservative',
+    currentInvestments: ['Company pension', 'Stock portfolio']
+  },
+  {
+    id: 3,
+    name: 'David Kim',
+    age: 35,
+    occupation: 'Software Engineer',
+    familyStatus: 'Married, expecting first child',
+    income: 135000,
+    goals: ['Family protection', 'Long-term savings', 'Future college fund'],
+    riskTolerance: 'Aggressive',
+    currentInvestments: ['Tech company RSUs', 'Cryptocurrency']
+  }
+];

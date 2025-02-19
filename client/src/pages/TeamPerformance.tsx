@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
+import {
   Users, TrendingUp, BookOpen, Target,
   AlertCircle, ChevronRight, Award,
   Check, X
@@ -103,11 +103,19 @@ const productDetails = {
   }
 };
 
+// Sample prospect data -  Replace with your actual data fetching mechanism
+const prospects = [
+  { id: 1, name: 'John Doe', occupation: 'Software Engineer', age: 35, familyStatus: ['married', 'kids'], income: 120000, riskTolerance: 'Moderate', currentInvestments: ['Stocks', 'Bonds'] },
+  { id: 2, name: 'Jane Smith', occupation: 'Teacher', age: 60, familyStatus: ['widowed'], income: 60000, riskTolerance: 'Conservative', currentInvestments: ['CDs', 'Savings Accounts'] },
+  { id: 3, name: 'Peter Jones', occupation: 'Entrepreneur', age: 45, familyStatus: ['married', 'expecting'], income: 200000, riskTolerance: 'Aggressive', currentInvestments: ['Stocks', 'Real Estate'] }
+];
+
 const TeamPerformance = () => {
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [selectedProspect, setSelectedProspect] = useState<typeof prospects[0] | null>(null);
 
   const handleProductSelect = (productName: string) => {
     setSelectedProducts(prev => {
@@ -121,17 +129,98 @@ const TeamPerformance = () => {
     });
   };
 
+  const generateSellingPoints = (prospect: typeof prospects[0], products: string[]) => {
+    const points: Record<string, string[]> = {};
+
+    products.forEach(product => {
+      const productDetails = productDetails[product as keyof typeof productDetails];
+      const sellingPoints = [];
+
+      // Age-based recommendations
+      if (prospect.age >= 55 && product === 'SecureHorizon') {
+        sellingPoints.push(
+          'Given your career stage, SecureHorizon\'s guaranteed income feature provides the stability you\'re looking for.',
+          'The principal protection aligns perfectly with your conservative approach to retirement planning.'
+        );
+      }
+
+      // Family status recommendations
+      if (prospect.familyStatus.includes('kids') || prospect.familyStatus.includes('expecting')) {
+        if (product === 'Prolife IUL') {
+          sellingPoints.push(
+            'The living benefits feature ensures your family\'s financial security while building cash value.',
+            'Flexible premium payments adapt to your growing family\'s changing needs.'
+          );
+        }
+      }
+
+      // Income and investment style recommendations
+      if (prospect.income >= 100000 && prospect.riskTolerance === 'Moderate') {
+        if (product === 'Sunflower Annuity') {
+          sellingPoints.push(
+            'The multiple crediting strategies allow you to balance growth potential with security.',
+            'Tax-deferred growth complements your existing investment portfolio.'
+          );
+        }
+      }
+
+      points[product] = sellingPoints;
+    });
+
+    return points;
+  };
+
   const ComparisonView = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold">Product Comparison</h3>
-        <Button
-          variant="outline"
-          onClick={() => setShowComparison(false)}
-        >
-          Back to Products
-        </Button>
+        <div className="flex items-center gap-4">
+          <select
+            className="p-2 border rounded-lg"
+            onChange={(e) => setSelectedProspect(prospects.find(p => p.id === parseInt(e.target.value)) || null)}
+            value={selectedProspect?.id || ''}
+          >
+            <option value="">Select a prospect...</option>
+            {prospects.map(prospect => (
+              <option key={prospect.id} value={prospect.id}>
+                {prospect.name} - {prospect.occupation}
+              </option>
+            ))}
+          </select>
+          <Button
+            variant="outline"
+            onClick={() => setShowComparison(false)}
+          >
+            Back to Products
+          </Button>
+        </div>
       </div>
+
+      {selectedProspect && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Prospect Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold mb-2">Personal Information</h4>
+                <p>Name: {selectedProspect.name}</p>
+                <p>Age: {selectedProspect.age}</p>
+                <p>Occupation: {selectedProspect.occupation}</p>
+                <p>Family Status: {selectedProspect.familyStatus.join(', ')}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Financial Profile</h4>
+                <p>Income: ${selectedProspect.income.toLocaleString()}</p>
+                <p>Risk Tolerance: {selectedProspect.riskTolerance}</p>
+                <p>Current Investments: {selectedProspect.currentInvestments.join(', ')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 gap-6">
         {/* Target Audience Comparison */}
         <Card>
@@ -219,124 +308,36 @@ const TeamPerformance = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
 
-  return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold">Team Performance</h1>
-          <p className="text-gray-500">Track team metrics and product performance</p>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="training">Training</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview">
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="text-xl">Business Value Tracking</CardTitle>
-                <p className="text-gray-500 text-sm">Track your progress towards annual target</p>
-              </CardHeader>
-              <CardContent>
-                <BusinessValueChart data={businessValueData} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="products">
-            {showComparison ? (
-              <ComparisonView />
-            ) : (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <p className="text-sm text-gray-500">
-                    Select up to 3 products to compare
-                  </p>
-                  <Button
-                    onClick={() => setShowComparison(true)}
-                    disabled={selectedProducts.length < 2}
-                  >
-                    Compare Selected ({selectedProducts.length})
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {Object.entries(productDetails).map(([product, details]) => (
-                    <Card key={product} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={selectedProducts.includes(product)}
-                              onCheckedChange={() => handleProductSelect(product)}
-                            />
-                            <h3 className="font-bold text-lg">{product}</h3>
+      {selectedProspect && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Personalized Selling Points</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              {selectedProducts.map(product => {
+                const sellingPoints = generateSellingPoints(selectedProspect, [product])[product];
+                return (
+                  <div key={product} className="space-y-4">
+                    <h4 className="font-bold text-lg">{product}</h4>
+                    <div className="space-y-2">
+                      {sellingPoints.map((point, idx) => (
+                        <div key={idx} className="flex items-start gap-2">
+                          <div className="mt-1">
+                            <Target size={16} className="text-blue-500" />
                           </div>
-                          <Badge>{details.provider}</Badge>
+                          <p className="text-sm">{point}</p>
                         </div>
-                        <div className="space-y-2">
-                          {details.features.map((feature, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <ChevronRight size={16} className="text-blue-500" />
-                              <span className="text-sm">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <a
-                          href={details.training}
-                          className="mt-4 flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                        >
-                          <BookOpen size={16} />
-                          <span>Training Materials</span>
-                        </a>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </>
-            )}
-          </TabsContent>
-
-          <TabsContent value="training">
-            <Card>
-              <CardHeader>
-                <CardTitle>Training Resources</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  <Card className="p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-blue-50">
-                        <BookOpen className="h-6 w-6 text-blue-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Product Training</h3>
-                        <p className="text-sm text-gray-500">Learn about our insurance products</p>
-                      </div>
+                      ))}
                     </div>
-                  </Card>
-                  <Card className="p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-purple-50">
-                        <Users className="h-6 w-6 text-purple-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Team Building</h3>
-                        <p className="text-sm text-gray-500">Leadership and management skills</p>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
