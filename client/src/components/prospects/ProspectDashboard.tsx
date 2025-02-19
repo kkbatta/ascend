@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Users, Search, Plus, Star,
-  Phone, Mail, Calendar, ChevronDown, ChevronUp
+  Phone, Mail, Calendar, ChevronDown, ChevronUp,
+  BarChart2
 } from 'lucide-react';
 import { ProspectTimeline } from './ProspectTimeline';
 import {
@@ -14,6 +15,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Link } from "wouter";
 
 // Define stages with their colors and descriptions
 const stages = [
@@ -194,8 +196,6 @@ const ProspectCard = ({ prospect, stageColor, stageTextColor }) => {
 };
 
 const ProspectDashboard = () => {
-  // ... stages definition remains the same ...
-
   return (
     <div className="h-screen bg-gray-50 overflow-hidden">
       <div className="p-4">
@@ -205,6 +205,12 @@ const ProspectDashboard = () => {
             <p className="text-gray-500">Manage prospects through different stages</p>
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/prospects/analytics">
+              <Button variant="outline" className="flex items-center gap-2">
+                <BarChart2 size={20} />
+                Analytics
+              </Button>
+            </Link>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <Input
