@@ -17,6 +17,23 @@ import { useToast } from "@/hooks/use-toast";
 
 // Page-specific enhancement ideas
 const pageIdeas = {
+  '/golden-era': [
+    'Add portfolio value prediction using AI',
+    'Implement policy document upload and OCR scanning',
+    'Add interactive retirement planning calculator',
+    'Enable multi-policy performance comparison charts',
+    'Add estate planning document templates',
+    'Implement automated policy renewal reminders',
+    'Add beneficiary management system',
+    'Enable AI-powered risk assessment scoring',
+    'Add historical policy performance tracking',
+    'Implement spouse policy integration analysis',
+    'Add tax implication calculator for policies',
+    'Enable video chat consultation scheduling',
+    'Add personalized retirement milestone tracking',
+    'Implement policy conversion recommendations',
+    'Add market condition impact analysis'
+  ],
   '/': [
     'Add personalized quick actions based on user role',
     'Implement dark mode support',
@@ -41,7 +58,7 @@ const pageIdeas = {
     'Add prospect source attribution analytics',
     'Implement funnel visualization options',
     'Add cohort analysis capabilities',
-    'Enable data export in multiple formats',
+    'Enable data export in multiple formats'
   ],
   '/team-performance': [
     'Add team member achievements and badges',
@@ -99,9 +116,9 @@ const GenerateDialog: React.FC<GenerateDialogProps> = ({
               />
               <p className="text-xs text-gray-500">
                 You can get your API key from{' '}
-                <a 
-                  href="https://platform.openai.com/api-keys" 
-                  target="_blank" 
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline"
                 >
@@ -113,7 +130,7 @@ const GenerateDialog: React.FC<GenerateDialogProps> = ({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button 
+          <Button
             onClick={() => onConfirm(apiKey)}
             disabled={!apiKey.startsWith('sk-')}
           >
