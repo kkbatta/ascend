@@ -472,3 +472,69 @@ export type InsertProductCommissionRate = z.infer<typeof insertProductCommission
 export type ProductCommissionRate = typeof productCommissionRates.$inferSelect;
 export type InsertCommissionEntry = z.infer<typeof insertCommissionEntrySchema>;
 export type CommissionEntry = typeof commissionEntries.$inferSelect;
+
+// Add commission template tables
+export const commissionTemplates = pgTable("commission_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const commissionRules = pgTable("commission_rules", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => commissionTemplates.id).notNull(),
+  agentLevel: text("agent_level").notNull(), // associate, MD, RMD, etc.
+  baseCommissionRate: real("base_commission_rate").notNull(),
+  personalProductionRequirement: integer("personal_production_requirement"),
+  teamProductionRequirement: integer("team_production_requirement"),
+  overrideRate: real("override_rate"), // percentage of team's production
+  maxOverrideDepth: integer("max_override_depth"), // how many levels down override applies
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bonusRules = pgTable("bonus_rules", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").references(() => commissionTemplates.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  threshold: integer("threshold").notNull(), // production threshold to qualify
+  bonusType: text("bonus_type").notNull(), // flat, percentage
+  bonusValue: real("bonus_value").notNull(),
+  isPeriodic: boolean("is_periodic").default(false),
+  periodType: text("period_type"), // monthly, quarterly, yearly
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Add relations
+export const commissionTemplateRelations = relations(commissionTemplates, ({ many }) => ({
+  rules: many(commissionRules),
+  bonuses: many(bonusRules),
+}));
+
+// Add schemas
+export const insertCommissionTemplateSchema = createInsertSchema(commissionTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCommissionRuleSchema = createInsertSchema(commissionRules).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBonusRuleSchema = createInsertSchema(bonusRules).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Add types
+export type InsertCommissionTemplate = z.infer<typeof insertCommissionTemplateSchema>;
+export type CommissionTemplate = typeof commissionTemplates.$inferSelect;
+export type InsertCommissionRule = z.infer<typeof insertCommissionRuleSchema>;
+export type CommissionRule = typeof commissionRules.$inferSelect;
+export type InsertBonusRule = z.infer<typeof insertBonusRuleSchema>;
+export type BonusRule = typeof bonusRules.$inferSelect;
