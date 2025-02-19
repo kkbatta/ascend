@@ -24,7 +24,7 @@ interface RetiredCustomer {
   pastPolicies: Policy[];
 }
 
-export const GoldenEra = () => {
+const GoldenEra = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<RetiredCustomer | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([]);
@@ -41,7 +41,7 @@ export const GoldenEra = () => {
 
     // Add user message to chat
     setChatHistory(prev => [...prev, { role: 'user', content: chatMessage }]);
-    
+
     try {
       const response = await fetch('/api/analyze-policy', {
         method: 'POST',
@@ -189,3 +189,5 @@ export const GoldenEra = () => {
     </div>
   );
 };
+
+export default GoldenEra;
