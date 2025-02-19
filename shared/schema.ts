@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, real, timestamp, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, real, timestamp, foreignKey, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -252,3 +252,66 @@ export const insertIdeaSchema = createInsertSchema(ideas).omit({
 
 export type InsertIdea = z.infer<typeof insertIdeaSchema>;
 export type Idea = typeof ideas.$inferSelect;
+
+
+// Add provider business metrics table
+export const providerMetrics = pgTable("provider_metrics", {
+  id: serial("id").primaryKey(),
+  provider: text("provider").notNull(),
+  productType: text("product_type").notNull(),
+  revenue: integer("revenue").notNull(),
+  policyCount: integer("policy_count").notNull(),
+  averagePremium: real("average_premium").notNull(),
+  month: timestamp("month").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProviderMetricsSchema = createInsertSchema(providerMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Add organization revenue table
+export const organizationRevenue = pgTable("organization_revenue", {
+  id: serial("id").primaryKey(),
+  orgMemberId: integer("org_member_id").references(() => orgMembers.id).notNull(),
+  revenue: integer("revenue").notNull(),
+  commissions: integer("commissions").notNull(),
+  newPolicies: integer("new_policies").notNull(),
+  renewals: integer("renewals").notNull(),
+  month: timestamp("month").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOrgRevenueSchema = createInsertSchema(organizationRevenue).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Add AI action items table
+export const aiActionItems = pgTable("ai_action_items", {
+  id: serial("id").primaryKey(),
+  orgMemberId: integer("org_member_id").references(() => orgMembers.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull(),
+  priority: text("priority").notNull(),
+  dueDate: timestamp("due_date"),
+  aiSuggestion: json("ai_suggestion").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAiActionItemSchema = createInsertSchema(aiActionItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Add new types
+export type ProviderMetrics = typeof providerMetrics.$inferSelect;
+export type InsertProviderMetrics = z.infer<typeof insertProviderMetricsSchema>;
+export type OrganizationRevenue = typeof organizationRevenue.$inferSelect;
+export type InsertOrganizationRevenue = z.infer<typeof insertOrgRevenueSchema>;
+export type AiActionItem = typeof aiActionItems.$inferSelect;
+export type InsertAiActionItem = z.infer<typeof insertAiActionItemSchema>;

@@ -9,6 +9,7 @@ import Associates from "@/pages/Associates";
 import ProspectDashboard from "@/components/prospects/ProspectDashboard";
 import { ProspectAnalytics } from "@/components/prospects/ProspectAnalytics";
 import GoldenEra from "@/components/dashboard/GoldenEra";
+import Reports from "@/pages/Reports";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
         <Route path="/prospects" component={ProspectDashboard} />
         <Route path="/prospects/analytics" component={ProspectAnalytics} />
         <Route path="/golden-era" component={GoldenEra} />
+        <Route path="/reports" component={Reports} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
