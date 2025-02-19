@@ -130,31 +130,86 @@ const TeamPerformance = () => {
       const sellingPoints = [];
 
       // Age-based recommendations
-      if (prospect.age >= 55 && product === 'SecureHorizon') {
+      if (prospect.age >= 55) {
+        if (product === 'SecureHorizon') {
+          sellingPoints.push(
+            `With your experience of ${prospect.age} years, SecureHorizon's guaranteed income feature will provide the stability you've earned.`,
+            `As someone who's built significant wealth over your career, our principal protection ensures your hard-earned assets are secure.`,
+            `The tax-deferred growth aligns perfectly with your retirement planning needs.`
+          );
+        }
+      } else if (prospect.age >= 35 && prospect.age < 55) {
+        if (product === 'Sunflower Annuity') {
+          sellingPoints.push(
+            `At your career stage, Sunflower Annuity's flexible premium options give you the freedom to invest as your income grows.`,
+            `You're in your peak earning years - our competitive rates will help maximize your wealth accumulation.`,
+            `The multiple investment choices let you balance growth with security, perfect for your career stage.`
+          );
+        }
+      }
+
+      // Family status considerations
+      if (prospect.familyStatus.toLowerCase().includes('kid') ||
+          prospect.familyStatus.toLowerCase().includes('expecting')) {
+        if (product === 'Prolife IUL') {
+          sellingPoints.push(
+            `As a family person, Prolife IUL's living benefits ensure your loved ones are protected while building valuable assets.`,
+            `The flexible premium payments adapt to your family's changing needs, especially important with children's expenses.`,
+            `Think of it as a safety net that grows with your family, providing both protection and investment opportunities.`
+          );
+        }
+      }
+
+      // Income-based recommendations
+      if (prospect.income >= 150000) {
+        if (product === 'SecureHorizon') {
+          sellingPoints.push(
+            `Your income level puts you in an ideal position to maximize SecureHorizon's tax advantages.`,
+            `With your strong earning position, you can take full advantage of our premium contribution limits.`
+          );
+        }
+      } else if (prospect.income >= 75000) {
+        if (product === 'Sunflower Annuity') {
+          sellingPoints.push(
+            `The Sunflower Annuity's flexible contribution structure works well with your income level.`,
+            `You can start building your retirement nest egg while maintaining financial flexibility.`
+          );
+        }
+      }
+
+      // Investment style and risk tolerance
+      if (prospect.riskTolerance.toLowerCase() === 'conservative') {
+        if (product === 'SecureHorizon') {
+          sellingPoints.push(
+            `As a conservative investor, you'll appreciate our guaranteed minimum returns.`,
+            `Our principal protection feature aligns perfectly with your careful approach to wealth management.`
+          );
+        }
+      } else if (prospect.riskTolerance.toLowerCase() === 'aggressive') {
+        if (product === 'Prolife IUL') {
+          sellingPoints.push(
+            `For someone comfortable with market dynamics like yourself, our variable investment options offer greater growth potential.`,
+            `You can leverage market opportunities while maintaining the security of a life insurance base.`
+          );
+        }
+      }
+
+      // Current investment portfolio considerations
+      if (prospect.currentInvestments.some(inv => inv.toLowerCase().includes('401k') ||
+          inv.toLowerCase().includes('pension'))) {
         sellingPoints.push(
-          'Given your career stage, SecureHorizon\'s guaranteed income feature provides the stability you\'re looking for.',
-          'The principal protection aligns perfectly with your conservative approach to retirement planning.'
+          `This product complements your existing retirement accounts, providing additional tax advantages.`,
+          `You can diversify your retirement strategy beyond your current portfolio.`
         );
       }
 
-      // Family status recommendations
-      if (prospect.familyStatus.includes('kids') || prospect.familyStatus.includes('expecting')) {
-        if (product === 'Prolife IUL') {
-          sellingPoints.push(
-            'The living benefits feature ensures your family\'s financial security while building cash value.',
-            'Flexible premium payments adapt to your growing family\'s changing needs.'
-          );
-        }
-      }
-
-      // Income and investment style recommendations
-      if (prospect.income >= 100000 && prospect.riskTolerance === 'Moderate') {
-        if (product === 'Sunflower Annuity') {
-          sellingPoints.push(
-            'The multiple crediting strategies allow you to balance growth potential with security.',
-            'Tax-deferred growth complements your existing investment portfolio.'
-          );
-        }
+      // Occupation-specific points
+      if (prospect.occupation.toLowerCase().includes('business') ||
+          prospect.occupation.toLowerCase().includes('entrepreneur')) {
+        sellingPoints.push(
+          `As a business professional, you'll appreciate the flexibility in premium payments that accommodates variable income streams.`,
+          `This product can be integrated into your business succession planning strategy.`
+        );
       }
 
       points[product] = sellingPoints;
