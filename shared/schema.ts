@@ -183,3 +183,53 @@ export type ProspectNote = typeof prospectNotes.$inferSelect;
 export type InsertProspectNote = z.infer<typeof insertProspectNoteSchema>;
 export type ProspectDocument = typeof prospectDocuments.$inferSelect;
 export type InsertProspectDocument = z.infer<typeof insertProspectDocumentSchema>;
+
+// Add new tables for retired customers and policies
+export const retiredCustomers = pgTable("retired_customers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  age: integer("age").notNull(),
+  retirementYear: integer("retirement_year").notNull(),
+  netWorth: integer("net_worth").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const policies = pgTable("policies", {
+  id: serial("id").primaryKey(),
+  customerId: integer("customer_id").references(() => retiredCustomers.id).notNull(),
+  type: text("type").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  value: integer("value").notNull(),
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const retiredCustomerRelations = relations(retiredCustomers, ({ many }) => ({
+  policies: many(policies),
+}));
+
+export const policyRelations = relations(policies, ({ one }) => ({
+  customer: one(retiredCustomers, {
+    fields: [policies.customerId],
+    references: [retiredCustomers.id],
+  }),
+}));
+
+export const insertRetiredCustomerSchema = createInsertSchema(retiredCustomers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPolicySchema = createInsertSchema(policies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertRetiredCustomer = z.infer<typeof insertRetiredCustomerSchema>;
+export type RetiredCustomer = typeof retiredCustomers.$inferSelect;
+export type InsertPolicy = z.infer<typeof insertPolicySchema>;
+export type Policy = typeof policies.$inferSelect;

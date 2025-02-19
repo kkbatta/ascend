@@ -16,7 +16,8 @@ import {
   BarChart2,
   ChevronLeft,
   ChevronRight,
-  UserPlus 
+  UserPlus,
+  Coffee 
 } from 'lucide-react';
 import { AscendLogo } from '@/components/dashboard/AscendLogo';
 import { currentUser } from '@/lib/mock-data';
@@ -34,7 +35,8 @@ const iconComponents = {
   HelpCircle,
   Settings,
   LogOut,
-  UserPlus 
+  UserPlus,
+  Coffee
 };
 
 const navItems = [
@@ -43,7 +45,7 @@ const navItems = [
   { icon: 'UserPlus', label: 'Prospects', path: '/prospects' }, 
   { icon: 'Users', label: 'Associates', path: '/associates' },
   { icon: 'FileText', label: 'Business' },
-  { icon: 'Target', label: 'HGI Direct' },
+  { icon: 'Coffee', label: 'Golden Era', path: '/golden-era' }, 
   { icon: 'TrendingUp', label: 'Reports' },
   { icon: 'MessageSquare', label: 'Marketing' },
   { icon: 'BookOpen', label: 'Resources' },
