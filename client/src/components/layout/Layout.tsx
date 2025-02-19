@@ -44,12 +44,12 @@ const navItems = [
   { icon: 'BarChart2', label: 'Team Performance', path: '/team-performance' },
   { icon: 'UserPlus', label: 'Prospects', path: '/prospects' }, 
   { icon: 'Users', label: 'Associates', path: '/associates' },
-  { icon: 'FileText', label: 'Business' },
+  { icon: 'FileText', label: 'Business', path: '/business' },
   { icon: 'Coffee', label: 'Golden Era', path: '/golden-era' }, 
-  { icon: 'TrendingUp', label: 'Reports' },
-  { icon: 'MessageSquare', label: 'Marketing' },
-  { icon: 'BookOpen', label: 'Resources' },
-  { icon: 'HelpCircle', label: 'Help Center' }
+  { icon: 'TrendingUp', label: 'Reports', path: '/reports' },
+  { icon: 'MessageSquare', label: 'Marketing', path: '/marketing' },
+  { icon: 'BookOpen', label: 'Resources', path: '/resources' },
+  { icon: 'HelpCircle', label: 'Help Center', path: '/help' }
 ];
 
 interface LayoutProps {
