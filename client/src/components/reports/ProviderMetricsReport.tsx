@@ -30,6 +30,27 @@ const providers = [
   'Nationwide'
 ];
 
+// Generate mock data for the last 12 months
+const generateMockData = () => {
+  const mockData = [];
+  const now = new Date();
+
+  for (let i = 0; i < 12; i++) {
+    const date = addMonths(now, -i);
+    providers.forEach(provider => {
+      mockData.push({
+        date: format(date, 'yyyy-MM'),
+        provider,
+        revenue: Math.floor(Math.random() * 1000000) + 500000,
+        policyCount: Math.floor(Math.random() * 100) + 50,
+        averagePremium: Math.floor(Math.random() * 5000) + 2000,
+        productType: productTypes[Math.floor(Math.random() * productTypes.length)]
+      });
+    });
+  }
+  return mockData;
+};
+
 export const ProviderMetricsReport = () => {
   const [dateRange, setDateRange] = useState({
     from: startOfMonth(addMonths(new Date(), -6)),
@@ -40,13 +61,17 @@ export const ProviderMetricsReport = () => {
   const { data: metrics = [] } = useQuery({
     queryKey: ['providerMetrics', dateRange, selectedProductType],
     queryFn: async () => {
-      const response = await fetch(`/api/reports/provider-metrics?` + new URLSearchParams({
-        from: dateRange.from.toISOString(),
-        to: dateRange.to.toISOString(),
-        productType: selectedProductType
-      }));
-      if (!response.ok) throw new Error('Failed to fetch metrics');
-      return response.json();
+      // In a real app, this would be an API call
+      // For now, we'll return our generated mock data
+      const allData = generateMockData();
+      return allData.filter(item => {
+        const itemDate = new Date(item.date);
+        return (
+          itemDate >= dateRange.from &&
+          itemDate <= dateRange.to &&
+          (selectedProductType === 'All' || item.productType === selectedProductType)
+        );
+      });
     }
   });
 
@@ -60,7 +85,8 @@ export const ProviderMetricsReport = () => {
       .reduce((sum, m) => sum + m.policyCount, 0),
     avgPremium: metrics
       .filter(m => m.provider === provider)
-      .reduce((sum, m) => sum + m.averagePremium, 0) / metrics.filter(m => m.provider === provider).length || 0
+      .reduce((sum, m) => sum + m.averagePremium, 0) / 
+      metrics.filter(m => m.provider === provider).length || 0
   }));
 
   return (
@@ -73,7 +99,11 @@ export const ProviderMetricsReport = () => {
           <div className="flex gap-4">
             <DatePickerWithRange
               date={dateRange}
-              onSelect={setDateRange}
+              onSelect={(range) => {
+                if (range?.from && range?.to) {
+                  setDateRange({ from: range.from, to: range.to });
+                }
+              }}
             />
             <Select
               value={selectedProductType}
@@ -98,7 +128,9 @@ export const ProviderMetricsReport = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="provider" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: number) => `$${value.toLocaleString()}`}
+                />
                 <Legend />
                 <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
                 <Bar dataKey="policies" name="Policies" fill="#82ca9d" />
