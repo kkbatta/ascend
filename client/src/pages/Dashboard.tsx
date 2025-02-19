@@ -17,7 +17,7 @@ import {
   Settings,
   BarChart2
 } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 
 import { AscendLogo } from '@/components/dashboard/AscendLogo';
 import { MetricsCard } from '@/components/dashboard/MetricsCard';
@@ -54,7 +54,7 @@ const navItems = [
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [view, setView] = useState('recruiting');
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
 
   const currentMetrics = hierarchyMetrics[activeTab as keyof typeof hierarchyMetrics];
 
@@ -70,7 +70,7 @@ const Dashboard = () => {
             const IconComponent = iconComponents[item.icon as keyof typeof iconComponents];
             const isActive = item.path ? location === item.path : false;
             return (
-              <a
+              <Link
                 key={index}
                 href={item.path || '#'}
                 className={`flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 ${
@@ -79,7 +79,7 @@ const Dashboard = () => {
               >
                 <IconComponent size={20} />
                 <span>{item.label}</span>
-              </a>
+              </Link>
             );
           })}
           <div className="mt-auto border-t">
