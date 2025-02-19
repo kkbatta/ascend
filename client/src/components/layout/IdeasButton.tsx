@@ -29,6 +29,52 @@ const defaultIdeas = {
     'Implement policy performance benchmarking',
     'Add retirement income distribution modeling',
     'Create legacy planning visualization tools'
+  ],
+  '/business': [
+    'Add business metrics dashboard customization',
+    'Implement revenue forecasting with AI',
+    'Create business health score calculator',
+    'Add provider performance comparison tools',
+    'Implement automated reporting schedules',
+    'Create business growth trajectory analysis'
+  ],
+  '/business/overview': [
+    'Add interactive business metrics widgets',
+    'Implement real-time performance alerts',
+    'Create custom KPI tracking system',
+    'Add market trend analysis dashboard',
+    'Implement goal progress visualization',
+    'Create business health monitoring system'
+  ],
+  '/business/details': [
+    'Add detailed transaction history exports',
+    'Implement document version control',
+    'Create business relationship mapping',
+    'Add provider contract management',
+    'Implement renewal date tracking',
+    'Create policy portfolio analysis'
+  ],
+  '/business/team': [
+    'Add team performance benchmarking',
+    'Implement team goal setting interface',
+    'Create team achievement tracking',
+    'Add team member development plans',
+    'Implement team hierarchy visualization',
+    'Create team collaboration metrics'
+  ],
+  '/business/compensation': [
+    'Add commission template version control',
+    'Implement commission scenario modeling',
+    'Create override structure visualization',
+    'Add bonus qualification tracking',
+    'Implement commission dispute resolution system',
+    'Create commission payout forecasting',
+    'Add automated commission calculations',
+    'Implement multi-level override calculator',
+    'Create commission statement generator',
+    'Add commission plan comparison tools',
+    'Implement historical commission analysis',
+    'Create commission rule impact simulator'
   ]
 };
 
