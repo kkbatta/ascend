@@ -5,10 +5,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MessageSquare, 
-  Coffee, 
-  DollarSign, 
+import {
+  MessageSquare,
+  Coffee,
+  DollarSign,
   TrendingUp,
   AlertCircle,
   Shield,
@@ -19,7 +19,7 @@ import {
   Users,
   Home
 } from 'lucide-react';
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -49,9 +49,11 @@ const GoldenEra = () => {
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState([]);
   const [selectedProviders, setSelectedProviders] = useState([]);
   const [showProductComparison, setShowProductComparison] = useState(false);
+  const [comparisonAnalysis, setComparisonAnalysis] = useState('');
+  const [isAnalyzingComparison, setIsAnalyzingComparison] = useState(false);
 
   // Handle chat message submission
   const handleChatSubmit = async () => {
@@ -68,7 +70,7 @@ const GoldenEra = () => {
           customerId: selectedCustomer.id,
           message: chatMessage,
           policies: selectedCustomer.pastPolicies,
-          selectedProducts,
+          selectedProductTypes,
           selectedProviders
         })
       });
@@ -77,14 +79,39 @@ const GoldenEra = () => {
       setChatHistory(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (error) {
       console.error('Error analyzing policy:', error);
-      setChatHistory(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, I encountered an error while analyzing the policy. Please try again.' 
+      setChatHistory(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error while analyzing the policy. Please try again.'
       }]);
     }
 
     setIsAnalyzing(false);
     setChatMessage('');
+  };
+
+  // Handle comparison analysis
+  const analyzeComparison = async () => {
+    if (!selectedCustomer || selectedProductTypes.length === 0 || selectedProviders.length === 0) return;
+
+    setIsAnalyzingComparison(true);
+    try {
+      const response = await fetch('/api/analyze-comparison', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer: selectedCustomer,
+          productTypes: selectedProductTypes,
+          providers: selectedProviders
+        })
+      });
+
+      const data = await response.json();
+      setComparisonAnalysis(data.analysis);
+    } catch (error) {
+      console.error('Error analyzing comparison:', error);
+      setComparisonAnalysis('Failed to analyze comparison. Please try again.');
+    }
+    setIsAnalyzingComparison(false);
   };
 
   const PolicyCard = ({ policy }) => (
@@ -212,26 +239,51 @@ const GoldenEra = () => {
     </Dialog>
   );
 
-  const ProductComparison = ({ products, providers }) => {
+  const ProductComparison = ({ productTypes, providers }) => {
     if (!showProductComparison) return null;
 
-    const selectedProviderProducts = Object.entries(insuranceProviders)
-      .filter(([provider]) => providers.includes(provider))
-      .reduce((acc, [provider, products]) => {
-        Object.entries(products)
-          .filter(([type]) => selectedProducts.includes(type))
-          .forEach(([type, details]) => {
-            acc.push({ provider, type, ...details });
+    const selectedProducts = [];
+    providers.forEach(provider => {
+      productTypes.forEach(type => {
+        if (insuranceProviders[provider]?.[type]) {
+          selectedProducts.push({
+            provider,
+            type,
+            ...insuranceProviders[provider][type]
           });
-        return acc;
-      }, []);
+        }
+      });
+    });
 
     return (
       <div className="mt-4 space-y-4">
-        <h4 className="font-medium">Product Comparison</h4>
-        <div className="grid grid-cols-1 gap-4">
-          {selectedProviderProducts.map((product, index) => (
-            <Card key={index} className="p-4">
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium">Product Comparison</h4>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={analyzeComparison}
+            disabled={isAnalyzingComparison || selectedProducts.length === 0}
+          >
+            {isAnalyzingComparison ? 'Analyzing...' : 'Analyze Best Fit'}
+          </Button>
+        </div>
+
+        {comparisonAnalysis && (
+          <Card className="p-4 bg-blue-50/50 border-blue-200">
+            <div className="flex items-start gap-2">
+              <Target className="h-5 w-5 text-blue-500 mt-0.5" />
+              <div>
+                <h5 className="font-medium text-blue-700 mb-2">AI Recommendation</h5>
+                <p className="text-sm text-blue-600">{comparisonAnalysis}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {selectedProducts.map((product, index) => (
+            <Card key={`${product.provider}-${product.type}`} className="p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h5 className="font-medium">{product.name}</h5>
@@ -266,7 +318,7 @@ const GoldenEra = () => {
         selectedCustomer?.id === customer.id
           ? 'bg-primary/10 border-primary'
           : 'hover:bg-secondary'
-      }`}
+        }`}
       onClick={() => setSelectedCustomer(customer)}
     >
       <div className="flex justify-between items-start">
@@ -392,51 +444,121 @@ const GoldenEra = () => {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex flex-wrap gap-4">
-                      <Select
-                        onValueChange={(value) => setSelectedProviders(prev => 
-                          prev.includes(value) ? prev.filter(p => p !== value) : [...prev, value]
+                      {/* Provider Selection */}
+                      <div className="flex-1 min-w-[200px]">
+                        <label className="text-sm font-medium mb-2 block">Insurance Providers</label>
+                        <Select
+                          onValueChange={(value) => {
+                            setSelectedProviders(prev =>
+                              prev.includes(value)
+                                ? prev.filter(p => p !== value)
+                                : [...prev, value]
+                            );
+                            setComparisonAnalysis('');
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Add Provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.keys(insuranceProviders).map(provider => (
+                              <SelectItem key={provider} value={provider}>
+                                <div className="flex items-center gap-2">
+                                  {provider}
+                                  {selectedProviders.includes(provider) && (
+                                    <Badge variant="secondary" className="ml-2">Selected</Badge>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedProviders.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {selectedProviders.map(provider => (
+                              <Badge
+                                key={provider}
+                                variant="secondary"
+                                className="cursor-pointer"
+                                onClick={() => {
+                                  setSelectedProviders(prev => prev.filter(p => p !== provider));
+                                  setComparisonAnalysis('');
+                                }}
+                              >
+                                {provider} ×
+                              </Badge>
+                            ))}
+                          </div>
                         )}
-                      >
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Select Provider" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.keys(insuranceProviders).map(provider => (
-                            <SelectItem key={provider} value={provider}>
-                              {provider}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        onValueChange={(value) => setSelectedProducts(prev => 
-                          prev.includes(value) ? prev.filter(p => p !== value) : [...prev, value]
+                      </div>
+
+                      {/* Product Type Selection */}
+                      <div className="flex-1 min-w-[200px]">
+                        <label className="text-sm font-medium mb-2 block">Product Types</label>
+                        <Select
+                          onValueChange={(value) => {
+                            setSelectedProductTypes(prev =>
+                              prev.includes(value)
+                                ? prev.filter(p => p !== value)
+                                : [...prev, value]
+                            );
+                            setComparisonAnalysis('');
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Add Product Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from(new Set(
+                              Object.values(insuranceProviders)
+                                .flatMap(provider => Object.keys(provider))
+                            )).map(productType => (
+                              <SelectItem key={productType} value={productType}>
+                                <div className="flex items-center gap-2">
+                                  {productType}
+                                  {selectedProductTypes.includes(productType) && (
+                                    <Badge variant="secondary" className="ml-2">Selected</Badge>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedProductTypes.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {selectedProductTypes.map(type => (
+                              <Badge
+                                key={type}
+                                variant="secondary"
+                                className="cursor-pointer"
+                                onClick={() => {
+                                  setSelectedProductTypes(prev => prev.filter(p => p !== type));
+                                  setComparisonAnalysis('');
+                                }}
+                              >
+                                {type} ×
+                              </Badge>
+                            ))}
+                          </div>
                         )}
-                      >
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Select Product Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from(new Set(
-                            Object.values(insuranceProviders)
-                              .flatMap(provider => Object.keys(provider))
-                          )).map(productType => (
-                            <SelectItem key={productType} value={productType}>
-                              {productType}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowProductComparison(!showProductComparison)}
-                      >
-                        {showProductComparison ? 'Hide' : 'Show'} Comparison
-                      </Button>
+                      </div>
+
+                      <div className="w-full">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowProductComparison(!showProductComparison);
+                            if (!showProductComparison) setComparisonAnalysis('');
+                          }}
+                          disabled={selectedProductTypes.length === 0 || selectedProviders.length === 0}
+                        >
+                          {showProductComparison ? 'Hide' : 'Show'} Comparison
+                        </Button>
+                      </div>
                     </div>
 
                     <ProductComparison
-                      products={selectedProducts}
+                      productTypes={selectedProductTypes}
                       providers={selectedProviders}
                     />
 
@@ -446,10 +568,10 @@ const GoldenEra = () => {
                           <div
                             key={index}
                             className={`p-4 rounded-lg ${
-                              msg.role === 'assistant' 
-                                ? 'bg-primary/10 ml-4' 
+                              msg.role === 'assistant'
+                                ? 'bg-primary/10 ml-4'
                                 : 'bg-secondary mr-4'
-                            }`}
+                              }`}
                           >
                             {msg.content}
                           </div>
