@@ -36,6 +36,8 @@ import {
   Award,
   Target,
 } from "lucide-react";
+import { CompensationPlanManager } from "@/components/compensation/CompensationPlanManager";
+import { CommissionCalculator } from "@/components/compensation/CommissionCalculator";
 
 // Mock data
 const mockBusinessMetrics = {
@@ -101,7 +103,7 @@ const mockAchAccounts = [
 const Business = () => {
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [expandedMember, setExpandedMember] = useState<number | null>(null);
-  const [selectedView, setSelectedView] = useState<'overview' | 'details' | 'team'>('overview');
+  const [selectedView, setSelectedView] = useState<'overview' | 'details' | 'team' | 'compensation'>('overview');
   const { toast } = useToast();
 
   // Use mock data instead of API calls for now
@@ -203,6 +205,7 @@ const Business = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="details">Business Details</TabsTrigger>
           <TabsTrigger value="team">Team Performance</TabsTrigger>
+          <TabsTrigger value="compensation">Compensation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -433,6 +436,12 @@ const Business = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="compensation">
+          <div className="space-y-6">
+            <CommissionCalculator />
+            <CompensationPlanManager />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

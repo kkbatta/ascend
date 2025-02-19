@@ -380,3 +380,95 @@ export type InsertAchAccount = z.infer<typeof insertAchAccountSchema>;
 export type AchAccount = typeof achAccounts.$inferSelect;
 export type InsertAchTransaction = z.infer<typeof insertAchTransactionSchema>;
 export type AchTransaction = typeof achTransactions.$inferSelect;
+
+
+// Add compensation plan tables
+export const compensationPlans = pgTable("compensation_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  effectiveDate: timestamp("effective_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const compensationTiers = pgTable("compensation_tiers", {
+  id: serial("id").primaryKey(),
+  planId: integer("plan_id").references(() => compensationPlans.id).notNull(),
+  level: integer("level").notNull(),
+  personalSalesRequirement: integer("personal_sales_requirement").notNull(),
+  teamSalesRequirement: integer("team_sales_requirement").notNull(),
+  baseCommissionRate: real("base_commission_rate").notNull(),
+  overrideRate: real("override_rate"),
+  bonusRate: real("bonus_rate"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const productCommissionRates = pgTable("product_commission_rates", {
+  id: serial("id").primaryKey(),
+  planId: integer("plan_id").references(() => compensationPlans.id).notNull(),
+  productType: text("product_type").notNull(),
+  commissionRate: real("commission_rate").notNull(),
+  minimumPremium: integer("minimum_premium"),
+  bonusThreshold: integer("bonus_threshold"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const commissionEntries = pgTable("commission_entries", {
+  id: serial("id").primaryKey(),
+  memberId: integer("member_id").references(() => orgMembers.id).notNull(),
+  planId: integer("plan_id").references(() => compensationPlans.id).notNull(),
+  amount: real("amount").notNull(),
+  type: text("type").notNull(), // base, override, bonus
+  source: text("source").notNull(), // personal_sale, team_override, etc.
+  status: text("status").notNull(), // pending, approved, paid
+  transactionDate: timestamp("transaction_date").notNull(),
+  paidDate: timestamp("paid_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Add relations
+export const compensationPlanRelations = relations(compensationPlans, ({ many }) => ({
+  tiers: many(compensationTiers),
+  productRates: many(productCommissionRates),
+}));
+
+export const compensationTierRelations = relations(compensationTiers, ({ one }) => ({
+  plan: one(compensationPlans, {
+    fields: [compensationTiers.planId],
+    references: [compensationPlans.id],
+  }),
+}));
+
+// Add schemas
+export const insertCompensationPlanSchema = createInsertSchema(compensationPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCompensationTierSchema = createInsertSchema(compensationTiers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertProductCommissionRateSchema = createInsertSchema(productCommissionRates).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCommissionEntrySchema = createInsertSchema(commissionEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Add types
+export type InsertCompensationPlan = z.infer<typeof insertCompensationPlanSchema>;
+export type CompensationPlan = typeof compensationPlans.$inferSelect;
+export type InsertCompensationTier = z.infer<typeof insertCompensationTierSchema>;
+export type CompensationTier = typeof compensationTiers.$inferSelect;
+export type InsertProductCommissionRate = z.infer<typeof insertProductCommissionRateSchema>;
+export type ProductCommissionRate = typeof productCommissionRates.$inferSelect;
+export type InsertCommissionEntry = z.infer<typeof insertCommissionEntrySchema>;
+export type CommissionEntry = typeof commissionEntries.$inferSelect;
