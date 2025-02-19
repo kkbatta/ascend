@@ -7,50 +7,68 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceLine,
 } from 'recharts';
 
 interface BusinessValueChartProps {
   data: Array<{
     month: string;
-    actual: number;
+    personal: number;
+    team: number;
     target: number;
-    projected: number;
   }>;
+  showTarget?: boolean;
 }
 
-export const BusinessValueChart = ({ data }: BusinessValueChartProps) => (
-  <div className="h-80">
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="month" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line
-          type="monotone"
-          dataKey="actual"
-          stroke="#6366F1"
-          strokeWidth={2}
-          name="Actual Business"
-        />
-        <Line
-          type="monotone"
-          dataKey="target"
-          stroke="#EC4899"
-          strokeWidth={2}
-          strokeDasharray="5 5"
-          name="Target"
-        />
-        <Line
-          type="monotone"
-          dataKey="projected"
-          stroke="#8B5CF6"
-          strokeWidth={2}
-          name="Projected"
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-);
+export const BusinessValueChart = ({ data, showTarget = true }: BusinessValueChartProps) => {
+  const currentTarget = data[data.length - 1]?.target || 0;
+
+  return (
+    <div className="h-80">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis />
+          <Tooltip
+            formatter={(value: number) => ['$' + value.toLocaleString(), '']}
+            labelFormatter={(label) => `Month: ${label}`}
+          />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="personal"
+            name="Personal Production"
+            stroke="#3b82f6"
+            strokeWidth={2}
+          />
+          <Line
+            type="monotone"
+            dataKey="team"
+            name="Team Production"
+            stroke="#8b5cf6"
+            strokeWidth={2}
+          />
+          {showTarget && (
+            <>
+              <Line
+                type="monotone"
+                dataKey="target"
+                name="Target"
+                stroke="#ef4444"
+                strokeDasharray="5 5"
+              />
+              <ReferenceLine
+                y={currentTarget}
+                label="Current Target"
+                stroke="#ef4444"
+                strokeDasharray="3 3"
+              />
+            </>
+          )}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
