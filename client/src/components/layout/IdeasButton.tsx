@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Lightbulb, Check, Loader2, Bot, Send } from 'lucide-react';
+import { Lightbulb, Check, Loader2, Bot, Send, Plus, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,142 +14,99 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Page-specific enhancement ideas
-const pageIdeas = {
+// Default page-specific enhancement ideas
+const defaultIdeas = {
   '/golden-era': [
-    'Add portfolio value prediction using AI',
-    'Implement policy document upload and OCR scanning',
-    'Add interactive retirement planning calculator',
-    'Enable multi-policy performance comparison charts',
-    'Add estate planning document templates',
-    'Implement automated policy renewal reminders',
-    'Add beneficiary management system',
-    'Enable AI-powered risk assessment scoring',
-    'Add historical policy performance tracking',
-    'Implement spouse policy integration analysis',
-    'Add tax implication calculator for policies',
-    'Enable video chat consultation scheduling',
-    'Add personalized retirement milestone tracking',
-    'Implement policy conversion recommendations',
-    'Add market condition impact analysis'
-  ],
-  '/': [
-    'Add personalized quick actions based on user role',
-    'Implement dark mode support',
-    'Add keyboard shortcuts for common actions',
-    'Show performance trends over custom date ranges',
-  ],
-  '/prospects': [
-    'Enable automated stage transition notifications',
-    'Add prospect scoring algorithm based on engagement',
-    'Implement drag-and-drop for prospect cards between stages',
-    'Add bulk actions for prospects (e.g., bulk stage update)',
-    'Enable prospect card color coding based on priority/score',
-    'Add prospect history export functionality',
-    'Implement prospect merge for duplicate detection',
-    'Add prospect activity reminders and notifications',
-  ],
-  '/prospects/analytics': [
-    'Add AI-powered conversion predictions',
-    'Implement custom date range comparisons',
-    'Add team performance breakdowns',
-    'Enable custom metric tracking',
-    'Add prospect source attribution analytics',
-    'Implement funnel visualization options',
-    'Add cohort analysis capabilities',
-    'Enable data export in multiple formats'
-  ],
-  '/team-performance': [
-    'Add team member achievements and badges',
-    'Implement performance goal tracking',
-    'Add peer recognition system',
-    'Enable custom performance metrics',
-    'Add team collaboration insights',
-    'Implement skill gap analysis',
-    'Add training completion tracking',
-    'Enable performance trend forecasting',
-  ],
-  '/associates': [
-    'Add skill matrix visualization',
-    'Implement mentorship matching',
-    'Add career path planning tools',
-    'Enable custom associate groups',
-    'Add associate availability calendar',
-    'Implement associate rating system',
-    'Add associate document management',
-    'Enable associate performance comparisons',
-  ],
+    'Enable multi-policy income planning simulation',
+    'Add beneficiary relationship visualization',
+    'Create automated policy renewal tracking system',
+    'Implement policy comparison matrix with AI insights',
+    'Add retirement lifestyle goal planning',
+    'Enable estate tax impact analysis',
+    'Create spouse coverage gap analysis',
+    'Implement policy performance benchmarking',
+    'Add retirement income distribution modeling',
+    'Create legacy planning visualization tools'
+  ]
 };
 
-interface GenerateDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  idea: string;
-  onConfirm: (apiKey: string) => void;
-}
+const fetchIdeas = async (pagePath: string) => {
+  const response = await fetch(`/api/ideas?pagePath=${pagePath}`);
+  if (!response.ok) throw new Error('Failed to fetch ideas');
+  return response.json();
+};
 
-const GenerateDialog: React.FC<GenerateDialogProps> = ({
-  isOpen,
-  onClose,
-  idea,
-  onConfirm,
-}) => {
-  const [apiKey, setApiKey] = useState('');
+const addIdea = async (idea: { pagePath: string; content: string }) => {
+  const response = await fetch('/api/ideas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(idea),
+  });
+  if (!response.ok) throw new Error('Failed to add idea');
+  return response.json();
+};
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Generate Code for Enhancement</DialogTitle>
-          <DialogDescription>
-            This will use OpenAI to implement:
-            <div className="mt-2 font-medium text-foreground">{idea}</div>
-
-            <div className="mt-4 space-y-2">
-              <p className="text-sm">Please provide your OpenAI API key:</p>
-              <Input
-                type="password"
-                placeholder="sk-..."
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <p className="text-xs text-gray-500">
-                You can get your API key from{' '}
-                <a
-                  href="https://platform.openai.com/api-keys"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
-                >
-                  platform.openai.com/api-keys
-                </a>
-              </p>
-            </div>
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button
-            onClick={() => onConfirm(apiKey)}
-            disabled={!apiKey.startsWith('sk-')}
-          >
-            Generate & Implement
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+const deleteIdea = async (id: number) => {
+  const response = await fetch(`/api/ideas/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete idea');
 };
 
 export const IdeasButton = () => {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  const [generatingIdea, setGeneratingIdea] = useState<string | null>(null);
-  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
-  const [selectedIdea, setSelectedIdea] = useState<string>('');
+  const [newIdea, setNewIdea] = useState('');
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch ideas from the database
+  const { data: customIdeas = [] } = useQuery({
+    queryKey: ['ideas', location],
+    queryFn: () => fetchIdeas(location),
+  });
+
+  // Add new idea mutation
+  const addIdeaMutation = useMutation({
+    mutationFn: addIdea,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ideas', location] });
+      setNewIdea('');
+      toast({
+        title: "Idea added",
+        description: "Your idea has been saved successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to add idea",
+        description: "There was an error saving your idea. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete idea mutation
+  const deleteIdeaMutation = useMutation({
+    mutationFn: deleteIdea,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ideas', location] });
+      toast({
+        title: "Idea deleted",
+        description: "The idea has been removed successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to delete idea",
+        description: "There was an error deleting the idea. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Load checked state from localStorage on mount
   useEffect(() => {
@@ -164,78 +121,25 @@ export const IdeasButton = () => {
     localStorage.setItem('ideasCheckedState', JSON.stringify(checkedItems));
   }, [checkedItems]);
 
-  const handleGenerateCode = async (idea: string, apiKey: string) => {
-    setGeneratingIdea(idea);
-    try {
-      const response = await fetch('/api/generate-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-OpenAI-Key': apiKey,
-        },
-        body: JSON.stringify({
-          idea,
-          context: location,
-        }),
-      });
+  const handleAddIdea = async () => {
+    if (!newIdea.trim()) return;
 
-      if (!response.ok) {
-        throw new Error('Failed to generate code');
-      }
-
-      const result = await response.json();
-
-      // Show success toast
-      toast({
-        title: "Enhancement implemented",
-        description: "The changes have been applied successfully. The page will refresh shortly.",
-      });
-
-      // Refresh the page after a short delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-
-    } catch (error) {
-      toast({
-        title: "Generation failed",
-        description: "Failed to implement the enhancement. Please try again.",
-        variant: "destructive",
-      });
-      setCheckedItems(prev => ({
-        ...prev,
-        [idea]: false
-      }));
-    } finally {
-      setGeneratingIdea(null);
-      setShowGenerateDialog(false);
-    }
+    addIdeaMutation.mutate({
+      pagePath: location,
+      content: newIdea.trim(),
+    });
   };
 
-  const toggleItem = (idea: string) => {
-    if (checkedItems[idea]) {
-      // Unchecking is immediate
-      setCheckedItems(prev => ({
-        ...prev,
-        [idea]: false
-      }));
-    } else {
-      // Show confirmation dialog before checking
-      setSelectedIdea(idea);
-      setShowGenerateDialog(true);
-    }
-  };
+  const allIdeas = [
+    ...(defaultIdeas[location as keyof typeof defaultIdeas] || []).map(content => ({
+      id: content,
+      content,
+      isCustom: false
+    })),
+    ...customIdeas
+  ];
 
-  const handleConfirmGenerate = (apiKey: string) => {
-    setCheckedItems(prev => ({
-      ...prev,
-      [selectedIdea]: true
-    }));
-    handleGenerateCode(selectedIdea, apiKey);
-  };
-
-  const currentPageIdeas = pageIdeas[location as keyof typeof pageIdeas] || pageIdeas['/'];
-  const completedCount = currentPageIdeas.filter(idea => checkedItems[idea]).length;
+  const completedCount = allIdeas.filter(idea => checkedItems[idea.id]).length;
 
   return (
     <>
@@ -255,45 +159,57 @@ export const IdeasButton = () => {
               <Lightbulb className="w-5 h-5" />
               Enhancement Ideas
               <span className="text-sm text-gray-500 ml-2">
-                ({completedCount}/{currentPageIdeas.length})
+                ({completedCount}/{allIdeas.length})
               </span>
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-4">
-              {currentPageIdeas.map((idea, index) => (
-                <div key={index} className="flex items-start space-x-2">
+              {allIdeas.map((idea) => (
+                <div key={idea.id} className="flex items-start space-x-2">
                   <Checkbox
-                    id={`idea-${index}`}
-                    checked={checkedItems[idea] || false}
-                    onCheckedChange={() => toggleItem(idea)}
-                    disabled={generatingIdea === idea}
+                    id={`idea-${idea.id}`}
+                    checked={checkedItems[idea.id] || false}
+                    onCheckedChange={(checked) => {
+                      setCheckedItems(prev => ({
+                        ...prev,
+                        [idea.id]: checked,
+                      }));
+                    }}
                   />
                   <label
-                    htmlFor={`idea-${index}`}
-                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                    htmlFor={`idea-${idea.id}`}
+                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 flex-1"
                   >
-                    {idea}
-                    {generatingIdea === idea && (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    )}
-                    {checkedItems[idea] && generatingIdea !== idea && (
-                      <Check className="w-3 h-3 text-green-500" />
-                    )}
+                    {idea.content}
                   </label>
+                  {idea.isCustom && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => deleteIdeaMutation.mutate(idea.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
           </ScrollArea>
+          <div className="flex gap-2 mt-4">
+            <Input
+              value={newIdea}
+              onChange={(e) => setNewIdea(e.target.value)}
+              placeholder="Add your own idea..."
+              onKeyPress={(e) => e.key === 'Enter' && handleAddIdea()}
+            />
+            <Button onClick={handleAddIdea} disabled={!newIdea.trim() || addIdeaMutation.isPending}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
-
-      <GenerateDialog
-        isOpen={showGenerateDialog}
-        onClose={() => setShowGenerateDialog(false)}
-        idea={selectedIdea}
-        onConfirm={handleConfirmGenerate}
-      />
     </>
   );
 };

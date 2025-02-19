@@ -8,6 +8,7 @@ import {
   memberAchievements,
   prospectNotes,
   prospectDocuments,
+  ideas,
   type User,
   type InsertUser,
   type OrgMember,
@@ -17,7 +18,9 @@ import {
   type ProspectNote,
   type InsertProspectNote,
   type ProspectDocument,
-  type InsertProspectDocument
+  type InsertProspectDocument,
+  type Idea,
+  type InsertIdea
 } from "@shared/schema";
 
 export interface IStorage {
@@ -50,6 +53,11 @@ export interface IStorage {
   getProspectDocuments(prospectId: number): Promise<ProspectDocument[]>;
   createProspectDocument(document: InsertProspectDocument): Promise<ProspectDocument>;
   getProspectDocument(id: number): Promise<ProspectDocument | undefined>;
+
+  // Ideas operations
+  getIdeas(pagePath: string): Promise<Idea[]>;
+  createIdea(idea: InsertIdea): Promise<Idea>;
+  deleteIdea(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -164,6 +172,29 @@ export class DatabaseStorage implements IStorage {
       .from(prospectDocuments)
       .where(eq(prospectDocuments.id, id));
     return document;
+  }
+
+  // Ideas methods
+  async getIdeas(pagePath: string): Promise<Idea[]> {
+    return await db
+      .select()
+      .from(ideas)
+      .where(eq(ideas.pagePath, pagePath))
+      .orderBy(ideas.createdAt);
+  }
+
+  async createIdea(idea: InsertIdea): Promise<Idea> {
+    const [newIdea] = await db
+      .insert(ideas)
+      .values(idea)
+      .returning();
+    return newIdea;
+  }
+
+  async deleteIdea(id: number): Promise<void> {
+    await db
+      .delete(ideas)
+      .where(eq(ideas.id, id));
   }
 }
 

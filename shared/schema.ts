@@ -233,3 +233,22 @@ export type InsertRetiredCustomer = z.infer<typeof insertRetiredCustomerSchema>;
 export type RetiredCustomer = typeof retiredCustomers.$inferSelect;
 export type InsertPolicy = z.infer<typeof insertPolicySchema>;
 export type Policy = typeof policies.$inferSelect;
+
+// Add custom ideas table
+export const ideas = pgTable("ideas", {
+  id: serial("id").primaryKey(),
+  pagePath: text("page_path").notNull(),
+  content: text("content").notNull(),
+  isCustom: boolean("is_custom").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertIdeaSchema = createInsertSchema(ideas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertIdea = z.infer<typeof insertIdeaSchema>;
+export type Idea = typeof ideas.$inferSelect;
