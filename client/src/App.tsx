@@ -6,6 +6,7 @@ import { Layout } from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import TeamPerformance from "@/pages/TeamPerformance";
 import Associates from "@/pages/Associates";
+import ProspectDashboard from "@/components/prospects/ProspectDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/team-performance" component={TeamPerformance} />
         <Route path="/associates" component={Associates} />
+        <Route path="/prospects" component={ProspectDashboard} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
