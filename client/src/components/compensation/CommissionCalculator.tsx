@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for development - This section is largely from the edited snippet.
+// Mock data for development
 const mockTemplates = [
   {
     id: 1,
@@ -91,6 +91,33 @@ const mockTemplates = [
   }
 ];
 
+const mockTransactions = [
+  {
+    id: 1,
+    date: '2025-02-15',
+    type: 'IUL Sale',
+    premium: 100000,
+    commission: 8500,
+    status: 'Paid'
+  },
+  {
+    id: 2,
+    date: '2025-02-14',
+    type: 'Term Life',
+    premium: 75000,
+    commission: 4875,
+    status: 'Pending'
+  },
+  {
+    id: 3,
+    date: '2025-02-13',
+    type: 'Annuity',
+    premium: 250000,
+    commission: 11250,
+    status: 'Processing'
+  }
+];
+
 export const CommissionCalculator = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(mockTemplates[0]);
   const [agentLevel, setAgentLevel] = useState('');
@@ -102,6 +129,12 @@ export const CommissionCalculator = () => {
   // In a real app, this would be an API call
   const { data: commissionData = mockTemplates } = useQuery({
     queryKey: ['/api/commission-templates'],
+    retry: 1,
+  });
+
+  // In a real app, this would be a separate API call
+  const { data: transactions = mockTransactions } = useQuery({
+    queryKey: ['/api/commission-transactions'],
     retry: 1,
   });
 
@@ -161,7 +194,7 @@ export const CommissionCalculator = () => {
               Manage Templates
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w 2xl">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Commission Templates</DialogTitle>
             </DialogHeader>
@@ -357,7 +390,7 @@ export const CommissionCalculator = () => {
           </div>
         </CardContent>
       </Card>
-      {/*Original code's Recent Transactions section remains here.  The above replaces the calculator section.*/}
+
       <Card>
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
@@ -374,7 +407,7 @@ export const CommissionCalculator = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {commissionData.recentTransactions.map((transaction) => (
+              {transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>{transaction.date}</TableCell>
                   <TableCell>{transaction.type}</TableCell>
