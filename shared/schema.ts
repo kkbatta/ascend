@@ -315,3 +315,68 @@ export type OrganizationRevenue = typeof organizationRevenue.$inferSelect;
 export type InsertOrganizationRevenue = z.infer<typeof insertOrgRevenueSchema>;
 export type AiActionItem = typeof aiActionItems.$inferSelect;
 export type InsertAiActionItem = z.infer<typeof insertAiActionItemSchema>;
+
+// Add ACH information table
+export const achAccounts = pgTable("ach_accounts", {
+  id: serial("id").primaryKey(),
+  orgMemberId: integer("org_member_id").references(() => orgMembers.id).notNull(),
+  bankName: text("bank_name").notNull(),
+  accountType: text("account_type").notNull(), // checking or savings
+  routingNumber: text("routing_number").notNull(),
+  accountNumber: text("account_number").notNull(),
+  isVerified: boolean("is_verified").default(false),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const achTransactions = pgTable("ach_transactions", {
+  id: serial("id").primaryKey(),
+  achAccountId: integer("ach_account_id").references(() => achAccounts.id).notNull(),
+  amount: real("amount").notNull(),
+  type: text("type").notNull(), // deposit or withdrawal
+  status: text("status").notNull(), // pending, completed, failed
+  description: text("description"),
+  transactionDate: timestamp("transaction_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Add relations for ACH tables
+export const achAccountRelations = relations(achAccounts, ({ one, many }) => ({
+  orgMember: one(orgMembers, {
+    fields: [achAccounts.orgMemberId],
+    references: [orgMembers.id],
+  }),
+  transactions: many(achTransactions),
+}));
+
+export const achTransactionRelations = relations(achTransactions, ({ one }) => ({
+  account: one(achAccounts, {
+    fields: [achTransactions.achAccountId],
+    references: [achAccounts.id],
+  }),
+}));
+
+// Add schemas for ACH tables
+export const insertAchAccountSchema = createInsertSchema(achAccounts).omit({
+  id: true,
+  isVerified: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  routingNumber: z.string().length(9, "Routing number must be 9 digits"),
+  accountNumber: z.string().min(4, "Account number must be at least 4 digits"),
+});
+
+export const insertAchTransactionSchema = createInsertSchema(achTransactions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Add types for ACH tables
+export type InsertAchAccount = z.infer<typeof insertAchAccountSchema>;
+export type AchAccount = typeof achAccounts.$inferSelect;
+export type InsertAchTransaction = z.infer<typeof insertAchTransactionSchema>;
+export type AchTransaction = typeof achTransactions.$inferSelect;
