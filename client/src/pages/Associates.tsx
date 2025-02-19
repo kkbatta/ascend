@@ -34,17 +34,49 @@ const mockOrgData = {
               name: 'Emma Davis',
               designation: 'MD',
               compensationPercentage: 60,
+              bonusPercentage: 5,
               yearlyIncome: 180000,
-              level: 4
+              level: 4,
+              children: [
+                {
+                  id: '11',
+                  name: 'Alex Turner',
+                  designation: 'SFC',
+                  compensationPercentage: 55,
+                  bonusPercentage: 3,
+                  yearlyIncome: 95000,
+                  level: 5,
+                  children: [
+                    {
+                      id: '15',
+                      name: 'Ryan Cooper',
+                      designation: 'Associate',
+                      compensationPercentage: 45,
+                      yearlyIncome: 65000,
+                      level: 6
+                    }
+                  ]
+                }
+              ]
             },
             {
               id: '8',
               name: 'James Wilson',
               designation: 'SFC',
               compensationPercentage: 55,
-              bonusPercentage: 5,
+              bonusPercentage: 3,
               yearlyIncome: 150000,
-              level: 4
+              level: 4,
+              children: [
+                {
+                  id: '12',
+                  name: 'Sophie Miller',
+                  designation: 'Associate',
+                  compensationPercentage: 45,
+                  yearlyIncome: 72000,
+                  level: 5
+                }
+              ]
             }
           ]
         }
@@ -75,7 +107,17 @@ const mockOrgData = {
               compensationPercentage: 50,
               bonusPercentage: 3,
               yearlyIncome: 120000,
-              level: 4
+              level: 4,
+              children: [
+                {
+                  id: '13',
+                  name: 'Emily White',
+                  designation: 'Associate',
+                  compensationPercentage: 45,
+                  yearlyIncome: 68000,
+                  level: 5
+                }
+              ]
             }
           ]
         },
@@ -91,10 +133,32 @@ const mockOrgData = {
             {
               id: '10',
               name: 'Patricia Lee',
-              designation: 'Associate',
-              compensationPercentage: 45,
-              yearlyIncome: 85000,
-              level: 4
+              designation: 'MD',
+              compensationPercentage: 60,
+              bonusPercentage: 5,
+              yearlyIncome: 165000,
+              level: 4,
+              children: [
+                {
+                  id: '14',
+                  name: 'Daniel Kim',
+                  designation: 'SFC',
+                  compensationPercentage: 55,
+                  bonusPercentage: 3,
+                  yearlyIncome: 92000,
+                  level: 5,
+                  children: [
+                    {
+                      id: '16',
+                      name: 'Jessica Park',
+                      designation: 'Associate',
+                      compensationPercentage: 45,
+                      yearlyIncome: 63000,
+                      level: 6
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -112,12 +176,14 @@ const Associates = () => {
           <p className="text-gray-500">View your Unilevel MLM organization hierarchy and performance</p>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>Unilevel Organization Chart</CardTitle>
           </CardHeader>
-          <CardContent>
-            <UnilevelOrgChart data={mockOrgData} />
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-max">
+              <UnilevelOrgChart data={mockOrgData} />
+            </div>
           </CardContent>
         </Card>
       </div>
