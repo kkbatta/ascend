@@ -18,7 +18,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [view, setView] = useState('recruiting');
 
-  const currentMetrics = hierarchyMetrics[activeTab as keyof typeof hierarchyMetrics];
+  const isHierarchyTab = activeTab !== 'performance';
+  const currentMetrics = isHierarchyTab ? hierarchyMetrics[activeTab as keyof typeof hierarchyMetrics] : null;
 
   return (
     <div className="p-6">
@@ -47,33 +48,35 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <MetricsCard
-            title="Total Team Size"
-            value={currentMetrics.teamSize.toLocaleString()}
-            icon={<Users className="w-6 h-6 text-blue-500" />}
-            trend={12}
-          />
-          <MetricsCard
-            title="Monthly Revenue"
-            value={`$${currentMetrics.monthlyRevenue.toLocaleString()}`}
-            icon={<DollarSign className="w-6 h-6 text-green-500" />}
-            trend={8}
-          />
-          <MetricsCard
-            title="New Recruits"
-            value={currentMetrics.newRecruits.toLocaleString()}
-            icon={<Users className="w-6 h-6 text-purple-500" />}
-            trend={15}
-          />
-          <MetricsCard
-            title="Team Production"
-            value={`$${currentMetrics.teamProduction.toLocaleString()}`}
-            icon={<BarChart3 className="w-6 h-6 text-orange-500" />}
-            trend={10}
-          />
-        </div>
+        {/* Metrics Grid - Only show for hierarchy tabs */}
+        {isHierarchyTab && currentMetrics && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <MetricsCard
+              title="Total Team Size"
+              value={currentMetrics.teamSize.toLocaleString()}
+              icon={<Users className="w-6 h-6 text-blue-500" />}
+              trend={12}
+            />
+            <MetricsCard
+              title="Monthly Revenue"
+              value={`$${currentMetrics.monthlyRevenue.toLocaleString()}`}
+              icon={<DollarSign className="w-6 h-6 text-green-500" />}
+              trend={8}
+            />
+            <MetricsCard
+              title="New Recruits"
+              value={currentMetrics.newRecruits.toLocaleString()}
+              icon={<Users className="w-6 h-6 text-purple-500" />}
+              trend={15}
+            />
+            <MetricsCard
+              title="Team Production"
+              value={`$${currentMetrics.teamProduction.toLocaleString()}`}
+              icon={<BarChart3 className="w-6 h-6 text-orange-500" />}
+              trend={10}
+            />
+          </div>
+        )}
 
         {/* Leaderboard */}
         <Card>
@@ -83,28 +86,30 @@ const Dashboard = () => {
                 <CardTitle className="text-xl mb-2">HGI Builder Leaderboard</CardTitle>
                 <p className="text-gray-500 text-sm">Track your team's performance and rankings</p>
               </div>
-              <div className="flex gap-4">
-                <button
-                  className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                    view === 'recruiting'
-                      ? 'bg-blue-500 text-white shadow-md'
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                  onClick={() => setView('recruiting')}
-                >
-                  Recruiting
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                    view === 'production'
-                      ? 'bg-blue-500 text-white shadow-md'
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                  onClick={() => setView('production')}
-                >
-                  Production
-                </button>
-              </div>
+              {isHierarchyTab && (
+                <div className="flex gap-4">
+                  <button
+                    className={`px-4 py-2 rounded-xl transition-all duration-200 ${
+                      view === 'recruiting'
+                        ? 'bg-blue-500 text-white shadow-md'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    onClick={() => setView('recruiting')}
+                  >
+                    Recruiting
+                  </button>
+                  <button
+                    className={`px-4 py-2 rounded-xl transition-all duration-200 ${
+                      view === 'production'
+                        ? 'bg-blue-500 text-white shadow-md'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    onClick={() => setView('production')}
+                  >
+                    Production
+                  </button>
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -116,19 +121,23 @@ const Dashboard = () => {
                 <TabsTrigger value="superBase">RMD Super Base</TabsTrigger>
                 <TabsTrigger value="performance">Performance</TabsTrigger>
               </TabsList>
-              <TabsContent value={activeTab}>
-                <div className="space-y-4">
-                  {hierarchyData[activeTab as keyof typeof hierarchyData].map((item) => (
-                    <LeaderboardItem key={item.id} item={item} view={view as 'recruiting' | 'production'} />
-                  ))}
-                </div>
-              </TabsContent>
-              <TabsContent value="performance">
-                <GamifiedLeaderboard
-                  teamMember={teamMemberStats[1]}
-                  achievements={achievements}
-                />
-              </TabsContent>
+
+              {isHierarchyTab ? (
+                <TabsContent value={activeTab}>
+                  <div className="space-y-4">
+                    {hierarchyData[activeTab as keyof typeof hierarchyData].map((item) => (
+                      <LeaderboardItem key={item.id} item={item} view={view as 'recruiting' | 'production'} />
+                    ))}
+                  </div>
+                </TabsContent>
+              ) : (
+                <TabsContent value="performance">
+                  <GamifiedLeaderboard
+                    teamMember={teamMemberStats[1]}
+                    achievements={achievements}
+                  />
+                </TabsContent>
+              )}
             </Tabs>
           </CardContent>
         </Card>
