@@ -1,3 +1,91 @@
+// Add insurance providers and their products at the top of the file
+export const insuranceProviders = {
+  'North American': {
+    'Indexed Universal Life': {
+      name: 'Builder Plus IUL 3',
+      features: [
+        'Guaranteed death benefit',
+        'Cash value accumulation',
+        'Multiple index account options'
+      ],
+      minPremium: 50000,
+      targetAge: '30-65',
+      riskLevel: 'Moderate',
+      fees: '1.5% annual',
+      returns: '6-8% historical average'
+    },
+    'Fixed Annuity': {
+      name: 'Guarantee Choice',
+      features: [
+        'Guaranteed interest rates',
+        'Tax-deferred growth',
+        'Multiple term options'
+      ],
+      minPremium: 25000,
+      targetAge: '50+',
+      riskLevel: 'Low',
+      fees: '0.5% annual',
+      returns: '3.5-4.5% guaranteed'
+    }
+  },
+  'Athene': {
+    'Fixed Indexed Annuity': {
+      name: 'Agility 10',
+      features: [
+        'Index-linked growth potential',
+        'Principal protection',
+        'Income rider options'
+      ],
+      minPremium: 35000,
+      targetAge: '55+',
+      riskLevel: 'Low-Moderate',
+      fees: '1% annual',
+      returns: '4-7% potential'
+    },
+    'Multi-Year Guaranteed Annuity': {
+      name: 'Athene MYGA',
+      features: [
+        'Guaranteed fixed rate',
+        'Multiple guarantee periods',
+        'Tax-deferred growth'
+      ],
+      minPremium: 20000,
+      targetAge: '60+',
+      riskLevel: 'Low',
+      fees: '0.3% annual',
+      returns: '4.2% guaranteed'
+    }
+  },
+  'Nationwide': {
+    'Variable Annuity': {
+      name: 'Destination Navigator 2.0',
+      features: [
+        'Investment flexibility',
+        'Death benefit options',
+        'Living benefit riders'
+      ],
+      minPremium: 40000,
+      targetAge: '45-70',
+      riskLevel: 'Moderate-High',
+      fees: '2% annual',
+      returns: '5-9% potential'
+    },
+    'Indexed Universal Life': {
+      name: 'Nationwide IUL Accumulator',
+      features: [
+        'Flexible premiums',
+        'Multiple indexing strategies',
+        'Long-term care rider option'
+      ],
+      minPremium: 45000,
+      targetAge: '35-65',
+      riskLevel: 'Moderate',
+      fees: '1.8% annual',
+      returns: '6-8% historical average'
+    }
+  }
+};
+
 // Array definitions
 const randomNames = [
   "James", "Mary", "John", "Patricia", "Michael", "Jennifer", "William", "Linda",
