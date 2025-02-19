@@ -19,6 +19,7 @@ interface OrgMember {
 interface UnilevelOrgChartProps {
   data: OrgMember;
   filterDesignation?: string;
+  searchQuery?: string;
   onSelectMember?: (member: OrgMember) => void;
 }
 
@@ -39,6 +40,42 @@ const formatCurrency = (amount: number) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+};
+
+const filterOrgData = (
+  data: OrgMember,
+  filterDesignation: string,
+  searchQuery: string
+): OrgMember | null => {
+  const matchesSearch = searchQuery
+    ? data.name.toLowerCase().includes(searchQuery.toLowerCase())
+    : true;
+  const matchesDesignation = filterDesignation === 'All' || data.designation === filterDesignation;
+
+  // If this node matches both filters, include it and all its descendants
+  if (matchesSearch && matchesDesignation) {
+    return {
+      ...data,
+      children: data.children?.map(child => filterOrgData(child, filterDesignation, searchQuery)).filter(child => child !== null)
+    };
+  }
+
+  // If this node doesn't match but has children, check children
+  if (data.children) {
+    const filteredChildren = data.children
+      .map(child => filterOrgData(child, filterDesignation, searchQuery))
+      .filter((child): child is OrgMember => child !== null);
+
+    if (filteredChildren.length > 0) {
+      return {
+        ...data,
+        children: filteredChildren
+      };
+    }
+  }
+
+  // If neither this node nor its children match, exclude this branch
+  return null;
 };
 
 const MemberNode: React.FC<{
@@ -66,8 +103,9 @@ const MemberNode: React.FC<{
       <div className="relative">
         <Card 
           className={cn(
-            "w-72 hover:shadow-lg transition-shadow border-2 border-opacity-50 cursor-pointer",
-            onSelectMember && "hover:ring-2 hover:ring-blue-500"
+            "w-72 hover:shadow-lg transition-shadow duration-200 border-2",
+            onSelectMember && "hover:ring-2 hover:ring-blue-500",
+            designationColors[member.designation as keyof typeof designationColors].split(' ')[0].replace('bg-', 'border-')
           )}
           onClick={() => onSelectMember?.(member)}
         >
@@ -122,18 +160,26 @@ const MemberNode: React.FC<{
       </div>
       {hasChildren && isExpanded && (
         <div className="relative mt-8">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-0.5 h-8 bg-gray-300"></div>
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-0.5 h-8 bg-gray-300 shadow-sm"></div>
           <div className="relative flex gap-12 pt-8">
             {member.children.map((child, index, array) => (
               <div key={child.id} className="relative">
                 {array.length > 1 && (
-                  <div 
-                    className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 h-0.5 bg-gray-300"
-                    style={{
-                      width: index === 0 ? '50%' : index === array.length - 1 ? '50%' : '100%',
-                      left: index === 0 ? '50%' : index === array.length - 1 ? '0' : '50%'
-                    }}
-                  />
+                  <>
+                    <div 
+                      className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 h-0.5 bg-gray-300 shadow-sm"
+                      style={{
+                        width: index === 0 ? '50%' : index === array.length - 1 ? '50%' : '100%',
+                        left: index === 0 ? '50%' : index === array.length - 1 ? '0' : '50%'
+                      }}
+                    />
+                    {index === 0 && (
+                      <div className="absolute top-0 right-0 w-full h-0.5 bg-gray-300 shadow-sm" />
+                    )}
+                    {index === array.length - 1 && (
+                      <div className="absolute top-0 left-0 w-full h-0.5 bg-gray-300 shadow-sm" />
+                    )}
+                  </>
                 )}
                 <MemberNode 
                   member={child}
@@ -153,7 +199,8 @@ const MemberNode: React.FC<{
 
 export const UnilevelOrgChart: React.FC<UnilevelOrgChartProps> = ({
   data,
-  filterDesignation,
+  filterDesignation = 'All',
+  searchQuery = '',
   onSelectMember
 }) => {
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
@@ -165,14 +212,24 @@ export const UnilevelOrgChart: React.FC<UnilevelOrgChartProps> = ({
     }));
   };
 
+  const filteredData = filterOrgData(data, filterDesignation, searchQuery);
+
+  if (!filteredData) {
+    return (
+      <div className="p-8 text-center text-gray-500">
+        No members found matching the current filters
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 overflow-x-auto min-w-max">
       <MemberNode 
-        member={data}
+        member={filteredData}
         filterDesignation={filterDesignation}
         onSelectMember={onSelectMember}
-        isExpanded={expandedNodes[data.id] !== false}
-        onToggle={() => toggleNode(data.id)}
+        isExpanded={expandedNodes[filteredData.id] !== false}
+        onToggle={() => toggleNode(filteredData.id)}
       />
     </div>
   );

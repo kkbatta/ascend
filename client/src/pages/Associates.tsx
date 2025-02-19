@@ -18,6 +18,7 @@ interface OrgMember {
 
 const Associates = () => {
   const [selectedDesignation, setSelectedDesignation] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<OrgMember[]>([]);
   const { toast } = useToast();
 
@@ -45,7 +46,6 @@ const Associates = () => {
       title: "Email action triggered",
       description: `Preparing to send email to ${selectedMembers.length} team members.`
     });
-    // Implement email functionality
   };
 
   const handleScheduleClick = () => {
@@ -62,11 +62,9 @@ const Associates = () => {
       title: "Schedule meeting",
       description: `Preparing to schedule meeting with ${selectedMembers.length} team members.`
     });
-    // Implement meeting scheduling functionality
   };
 
   const handleCollapseAll = () => {
-    // Implement collapse all functionality
     toast({
       title: "Collapsed all nodes",
       description: "All organization nodes have been collapsed."
@@ -74,7 +72,6 @@ const Associates = () => {
   };
 
   const handleExpandAll = () => {
-    // Implement expand all functionality
     toast({
       title: "Expanded all nodes",
       description: "All organization nodes have been expanded."
@@ -103,7 +100,9 @@ const Associates = () => {
             <CardTitle>Unilevel Organization Chart</CardTitle>
             <OrgActions
               selectedDesignation={selectedDesignation}
+              searchQuery={searchQuery}
               onDesignationChange={setSelectedDesignation}
+              onSearchChange={setSearchQuery}
               onEmailClick={handleEmailClick}
               onScheduleClick={handleScheduleClick}
               onCollapseAll={handleCollapseAll}
@@ -115,6 +114,7 @@ const Associates = () => {
               <UnilevelOrgChart
                 data={mockOrgData}
                 filterDesignation={selectedDesignation}
+                searchQuery={searchQuery}
                 onSelectMember={handleMemberSelect}
               />
             </div>
