@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, Check, Loader2, Bot, Send } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 // Page-specific enhancement ideas
 const pageIdeas = {
@@ -61,10 +65,74 @@ const pageIdeas = {
   ],
 };
 
+interface GenerateDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  idea: string;
+  onConfirm: (apiKey: string) => void;
+}
+
+const GenerateDialog: React.FC<GenerateDialogProps> = ({
+  isOpen,
+  onClose,
+  idea,
+  onConfirm,
+}) => {
+  const [apiKey, setApiKey] = useState('');
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Generate Code for Enhancement</DialogTitle>
+          <DialogDescription>
+            This will use OpenAI to implement:
+            <div className="mt-2 font-medium text-foreground">{idea}</div>
+
+            <div className="mt-4 space-y-2">
+              <p className="text-sm">Please provide your OpenAI API key:</p>
+              <Input
+                type="password"
+                placeholder="sk-..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">
+                You can get your API key from{' '}
+                <a 
+                  href="https://platform.openai.com/api-keys" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  platform.openai.com/api-keys
+                </a>
+              </p>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button 
+            onClick={() => onConfirm(apiKey)}
+            disabled={!apiKey.startsWith('sk-')}
+          >
+            Generate & Implement
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export const IdeasButton = () => {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [generatingIdea, setGeneratingIdea] = useState<string | null>(null);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState<string>('');
+  const { toast } = useToast();
 
   // Load checked state from localStorage on mount
   useEffect(() => {
@@ -79,14 +147,77 @@ export const IdeasButton = () => {
     localStorage.setItem('ideasCheckedState', JSON.stringify(checkedItems));
   }, [checkedItems]);
 
-  const toggleItem = (idea: string) => {
-    setCheckedItems(prev => ({
-      ...prev,
-      [idea]: !prev[idea]
-    }));
+  const handleGenerateCode = async (idea: string, apiKey: string) => {
+    setGeneratingIdea(idea);
+    try {
+      const response = await fetch('/api/generate-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-OpenAI-Key': apiKey,
+        },
+        body: JSON.stringify({
+          idea,
+          context: location,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate code');
+      }
+
+      const result = await response.json();
+
+      // Show success toast
+      toast({
+        title: "Enhancement implemented",
+        description: "The changes have been applied successfully. The page will refresh shortly.",
+      });
+
+      // Refresh the page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error) {
+      toast({
+        title: "Generation failed",
+        description: "Failed to implement the enhancement. Please try again.",
+        variant: "destructive",
+      });
+      setCheckedItems(prev => ({
+        ...prev,
+        [idea]: false
+      }));
+    } finally {
+      setGeneratingIdea(null);
+      setShowGenerateDialog(false);
+    }
   };
 
-  const currentPageIdeas = pageIdeas[location] || pageIdeas['/'];
+  const toggleItem = (idea: string) => {
+    if (checkedItems[idea]) {
+      // Unchecking is immediate
+      setCheckedItems(prev => ({
+        ...prev,
+        [idea]: false
+      }));
+    } else {
+      // Show confirmation dialog before checking
+      setSelectedIdea(idea);
+      setShowGenerateDialog(true);
+    }
+  };
+
+  const handleConfirmGenerate = (apiKey: string) => {
+    setCheckedItems(prev => ({
+      ...prev,
+      [selectedIdea]: true
+    }));
+    handleGenerateCode(selectedIdea, apiKey);
+  };
+
+  const currentPageIdeas = pageIdeas[location as keyof typeof pageIdeas] || pageIdeas['/'];
   const completedCount = currentPageIdeas.filter(idea => checkedItems[idea]).length;
 
   return (
@@ -119,12 +250,19 @@ export const IdeasButton = () => {
                     id={`idea-${index}`}
                     checked={checkedItems[idea] || false}
                     onCheckedChange={() => toggleItem(idea)}
+                    disabled={generatingIdea === idea}
                   />
                   <label
                     htmlFor={`idea-${index}`}
-                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
                   >
                     {idea}
+                    {generatingIdea === idea && (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    )}
+                    {checkedItems[idea] && generatingIdea !== idea && (
+                      <Check className="w-3 h-3 text-green-500" />
+                    )}
                   </label>
                 </div>
               ))}
@@ -132,6 +270,13 @@ export const IdeasButton = () => {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      <GenerateDialog
+        isOpen={showGenerateDialog}
+        onClose={() => setShowGenerateDialog(false)}
+        idea={selectedIdea}
+        onConfirm={handleConfirmGenerate}
+      />
     </>
   );
 };
