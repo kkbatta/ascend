@@ -42,32 +42,61 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-const findMemberByName = (
+// Helper function to find a member and their path to root
+const findMemberAndPath = (
   data: OrgMember,
   searchQuery: string,
-  filterDesignation: string
-): OrgMember | null => {
-  const matchesSearch = searchQuery
-    ? data.name.toLowerCase().includes(searchQuery.toLowerCase())
-    : true;
-  const matchesDesignation = filterDesignation === 'All' || data.designation === filterDesignation;
+  path: OrgMember[] = []
+): { member: OrgMember | null; path: OrgMember[] } => {
+  // Add current node to path
+  const currentPath = [...path, data];
 
-  // If this node matches both criteria, return it
-  if (matchesSearch && matchesDesignation) {
-    return data;
+  // Check if current node matches search
+  if (data.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+    return { member: data, path: currentPath };
   }
 
-  // If not found in current node, search children
+  // Search children
   if (data.children) {
     for (const child of data.children) {
-      const found = findMemberByName(child, searchQuery, filterDesignation);
-      if (found) {
-        return found;
+      const result = findMemberAndPath(child, searchQuery, currentPath);
+      if (result.member) {
+        return result;
       }
     }
   }
 
-  return null;
+  return { member: null, path: [] };
+};
+
+// Helper function to create a filtered tree that includes both upline and downline
+const createFilteredTree = (
+  path: OrgMember[],
+  targetMember: OrgMember,
+  filterDesignation: string
+): OrgMember | null => {
+  if (path.length === 0) return null;
+
+  // Start with the root node
+  let currentNode = { ...path[0] };
+  let current = currentNode;
+
+  // Reconstruct the path to the target member
+  for (let i = 1; i < path.length; i++) {
+    const nextNode = { ...path[i] };
+    // Only include children that match designation filter or are in the path
+    if (path[i].children) {
+      nextNode.children = path[i].children.filter(child => 
+        filterDesignation === 'All' || 
+        child.designation === filterDesignation ||
+        path.some(p => p.id === child.id)
+      );
+    }
+    current.children = [nextNode];
+    current = nextNode;
+  }
+
+  return currentNode;
 };
 
 const filterOrgData = (
@@ -75,11 +104,11 @@ const filterOrgData = (
   filterDesignation: string,
   searchQuery: string
 ): OrgMember | null => {
-  // If there's a search query, find the matching member and show their org structure
+  // If there's a search query, find the member and their path
   if (searchQuery) {
-    const foundMember = findMemberByName(data, searchQuery, filterDesignation);
-    if (foundMember) {
-      return foundMember;
+    const { member, path } = findMemberAndPath(data, searchQuery);
+    if (member) {
+      return createFilteredTree(path, member, filterDesignation);
     }
     return null;
   }
