@@ -126,7 +126,7 @@ const TeamPerformance = () => {
     const points: Record<string, string[]> = {};
 
     products.forEach(product => {
-      const productDetails = productDetails[product as keyof typeof productDetails];
+      const productInfo = productDetails[product as keyof typeof productDetails];
       const sellingPoints = [];
 
       // Age-based recommendations
