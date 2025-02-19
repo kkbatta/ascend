@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { AscendLogo } from '@/components/dashboard/AscendLogo';
 import { currentUser } from '@/lib/mock-data';
+import { IdeasButton } from './IdeasButton';
 
 const iconComponents = {
   BarChart3,
@@ -108,6 +109,9 @@ export const Layout = ({ children }: LayoutProps) => {
       <div className={`flex-1 ${isCollapsed ? 'ml-20' : 'ml-64'} transition-all duration-300`}>
         {children}
       </div>
+
+      {/* Ideas Button */}
+      <IdeasButton />
     </div>
   );
 };
