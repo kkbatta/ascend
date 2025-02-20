@@ -19,6 +19,28 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
+// Helper function to generate random user data
+const generateRandomUser = () => {
+  const randomString = (length: number) => 
+    Math.random().toString(36).substring(2, 2 + length);
+
+  const randomDate = () => {
+    const start = new Date(1970, 0, 1);
+    const end = new Date(2000, 11, 31);
+    const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return date.toISOString().split('T')[0];
+  };
+
+  return {
+    username: `user_${randomString(8)}`,
+    password: `Pass${randomString(8)}!`,
+    email: `test_${randomString(8)}@example.com`,
+    fullName: `Test User ${randomString(4)}`,
+    dateOfBirth: randomDate(),
+    aboutMe: `I am a test user generated for development purposes. Random ID: ${randomString(6)}`,
+  };
+};
+
 const Register = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -37,6 +59,17 @@ const Register = () => {
       referralCode: referralCode || undefined,
     },
   });
+
+  const fillRandomData = () => {
+    const randomData = generateRandomUser();
+    Object.entries(randomData).forEach(([key, value]) => {
+      form.setValue(key as keyof typeof randomData, value);
+    });
+    toast({
+      title: "Form filled with random data",
+      description: "You can now submit the form or modify the values.",
+    });
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -82,6 +115,16 @@ const Register = () => {
               )}
             </CardHeader>
             <CardContent>
+              <div className="mb-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={fillRandomData}
+                  className="w-full"
+                >
+                  Fill with Random Data
+                </Button>
+              </div>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
