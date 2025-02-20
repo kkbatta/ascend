@@ -31,7 +31,9 @@ const Associates = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch organization data');
       }
-      return response.json();
+      const data = await response.json();
+      // Return the first item since the API returns an array but we need a single root node
+      return data[0];
     }
   });
 
@@ -103,6 +105,14 @@ const Associates = () => {
     return (
       <div className="p-6 text-center text-red-500">
         Error loading organization data. Please try again later.
+      </div>
+    );
+  }
+
+  if (!orgData) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        No organization data available.
       </div>
     );
   }
