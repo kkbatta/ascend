@@ -3,21 +3,23 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, TrendingUp, Search, DollarSign, BarChart3, ArrowUpRight,
+import { Copy, Users, TrendingUp, Search, DollarSign, BarChart3, ArrowUpRight,
   FileText, Target, MessageSquare, HelpCircle, LogOut, CreditCard,
-  BookOpen, Settings
-} from 'lucide-react';
+  BookOpen, Settings, Link } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [view, setView] = useState('recruiting');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const { toast } = useToast();
 
   const currentUser = {
     name: "Rajitha",
     role: "Team Lead",
-    avatarUrl: "/api/placeholder/40/40?text=RT"
+    avatarUrl: "/api/placeholder/40/40?text=RT",
+    referralCode: "RAJ-X7Y2Z9" // This would come from the API
   };
 
   const navItems = [
@@ -190,6 +192,15 @@ const Dashboard = () => {
     </div>
   );
 
+  const copyReferralLink = () => {
+    const referralLink = `${window.location.origin}/register?ref=${currentUser.referralCode}`;
+    navigator.clipboard.writeText(referralLink);
+    toast({
+      title: "Referral link copied!",
+      description: "Share this link with your prospects to grow your team.",
+    });
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Left Navigation */}
@@ -241,11 +252,22 @@ const Dashboard = () => {
                     className="pl-10 pr-4 py-2 border rounded-xl w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   />
                 </div>
-                <div className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg">
-                  <Avatar className="w-8 h-8">
-                    <img src={currentUser.avatarUrl} alt={currentUser.name} />
-                  </Avatar>
-                  <span>Hello {currentUser.name}!</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    <Avatar className="w-8 h-8">
+                      <img src={currentUser.avatarUrl} alt={currentUser.name} />
+                    </Avatar>
+                    <span>Hello {currentUser.name}!</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={copyReferralLink}
+                  >
+                    <Link size={16} />
+                    <span>Share Referral</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -289,8 +311,8 @@ const Dashboard = () => {
                   <div className="flex gap-4">
                     <button
                       className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                        view === 'recruiting' 
-                          ? 'bg-blue-500 text-white shadow-md' 
+                        view === 'recruiting'
+                          ? 'bg-blue-500 text-white shadow-md'
                           : 'bg-gray-100 hover:bg-gray-200'
                       }`}
                       onClick={() => setView('recruiting')}
@@ -299,8 +321,8 @@ const Dashboard = () => {
                     </button>
                     <button
                       className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                        view === 'production' 
-                          ? 'bg-blue-500 text-white shadow-md' 
+                        view === 'production'
+                          ? 'bg-blue-500 text-white shadow-md'
                           : 'bg-gray-100 hover:bg-gray-200'
                       }`}
                       onClick={() => setView('production')}

@@ -58,6 +58,11 @@ export interface IStorage {
   getIdeas(pagePath: string): Promise<Idea[]>;
   createIdea(idea: InsertIdea): Promise<Idea>;
   deleteIdea(id: number): Promise<void>;
+
+  // New referral methods
+  getUserByReferralCode(referralCode: string): Promise<User | undefined>;
+  generateReferralCode(userId: number): Promise<string>;
+  updateUserReferralCode(userId: number, referralCode: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -195,6 +200,30 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(ideas)
       .where(eq(ideas.id, id));
+  }
+
+  // New referral methods
+  async getUserByReferralCode(referralCode: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.referralCode, referralCode));
+    return user;
+  }
+
+  async generateReferralCode(userId: number): Promise<string> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+
+    // Generate unique referral code based on username and random string
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const referralCode = `${user.username.substring(0, 3)}-${randomStr}`.toUpperCase();
+
+    await this.updateUserReferralCode(userId, referralCode);
+    return referralCode;
+  }
+
+  async updateUserReferralCode(userId: number, referralCode: string): Promise<void> {
+    await db.update(users)
+      .set({ referralCode })
+      .where(eq(users.id, userId));
   }
 }
 

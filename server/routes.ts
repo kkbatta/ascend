@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import OpenAI from "openai";
+import { insertUserSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Code generation endpoint
@@ -42,7 +43,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       `;
 
-      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [{ role: "user", content: prompt }],
@@ -50,14 +50,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Parse the response and apply changes
-      const result = JSON.parse(response.choices[0].message.content);
-
-      // TODO: Apply the changes to the files
-      // For now, just return the generated code
+      const result = JSON.parse(response.choices[0].message.content ?? '{}');
       res.json(result);
     } catch (error) {
       console.error('Code generation error:', error);
       res.status(500).json({ error: 'Failed to generate code' });
+    }
+  });
+
+  // Referral system endpoints
+  app.post('/api/users/:userId/referral-code', async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const referralCode = await storage.generateReferralCode(userId);
+      res.json({ referralCode });
+    } catch (error) {
+      console.error('Referral code generation error:', error);
+      res.status(500).json({ error: 'Failed to generate referral code' });
+    }
+  });
+
+  app.get('/api/referral/:code', async (req, res) => {
+    try {
+      const referralCode = req.params.code;
+      const referrer = await storage.getUserByReferralCode(referralCode);
+
+      if (!referrer) {
+        return res.status(404).json({ error: 'Invalid referral code' });
+      }
+
+      res.json({ 
+        valid: true,
+        referrerId: referrer.id,
+        referrerUsername: referrer.username 
+      });
+    } catch (error) {
+      console.error('Referral code validation error:', error);
+      res.status(500).json({ error: 'Failed to validate referral code' });
+    }
+  });
+
+  // Register with referral code
+  app.post('/api/register', async (req, res) => {
+    try {
+      const result = insertUserSchema.safeParse(req.body);
+
+      if (!result.success) {
+        return res.status(400).json({ error: 'Invalid user data' });
+      }
+
+      const { referralCode, ...userData } = result.data;
+      let referrerId = undefined;
+
+      if (referralCode) {
+        const referrer = await storage.getUserByReferralCode(referralCode);
+        if (referrer) {
+          referrerId = referrer.id;
+        }
+      }
+
+      const user = await storage.createUser({
+        ...userData,
+        referredBy: referrerId
+      });
+
+      // Generate a referral code for the new user
+      const newReferralCode = await storage.generateReferralCode(user.id);
+
+      res.json({ 
+        ...user, 
+        referralCode: newReferralCode 
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: 'Failed to register user' });
     }
   });
 

@@ -7,11 +7,16 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  referralCode: text("referral_code").unique(),
+  referredBy: integer("referred_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  referralCode: true,
+  referredBy: true,
 });
 
 export const orgMembers = pgTable("org_members", {
@@ -184,7 +189,6 @@ export type InsertProspectNote = z.infer<typeof insertProspectNoteSchema>;
 export type ProspectDocument = typeof prospectDocuments.$inferSelect;
 export type InsertProspectDocument = z.infer<typeof insertProspectDocumentSchema>;
 
-// Add new tables for retired customers and policies
 export const retiredCustomers = pgTable("retired_customers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -234,7 +238,6 @@ export type RetiredCustomer = typeof retiredCustomers.$inferSelect;
 export type InsertPolicy = z.infer<typeof insertPolicySchema>;
 export type Policy = typeof policies.$inferSelect;
 
-// Add custom ideas table
 export const ideas = pgTable("ideas", {
   id: serial("id").primaryKey(),
   pagePath: text("page_path").notNull(),
@@ -254,7 +257,6 @@ export type InsertIdea = z.infer<typeof insertIdeaSchema>;
 export type Idea = typeof ideas.$inferSelect;
 
 
-// Add provider business metrics table
 export const providerMetrics = pgTable("provider_metrics", {
   id: serial("id").primaryKey(),
   provider: text("provider").notNull(),
@@ -271,7 +273,6 @@ export const insertProviderMetricsSchema = createInsertSchema(providerMetrics).o
   createdAt: true,
 });
 
-// Add organization revenue table
 export const organizationRevenue = pgTable("organization_revenue", {
   id: serial("id").primaryKey(),
   orgMemberId: integer("org_member_id").references(() => orgMembers.id).notNull(),
@@ -288,7 +289,6 @@ export const insertOrgRevenueSchema = createInsertSchema(organizationRevenue).om
   createdAt: true,
 });
 
-// Add AI action items table
 export const aiActionItems = pgTable("ai_action_items", {
   id: serial("id").primaryKey(),
   orgMemberId: integer("org_member_id").references(() => orgMembers.id).notNull(),
@@ -308,7 +308,6 @@ export const insertAiActionItemSchema = createInsertSchema(aiActionItems).omit({
   updatedAt: true,
 });
 
-// Add new types
 export type ProviderMetrics = typeof providerMetrics.$inferSelect;
 export type InsertProviderMetrics = z.infer<typeof insertProviderMetricsSchema>;
 export type OrganizationRevenue = typeof organizationRevenue.$inferSelect;
@@ -316,12 +315,11 @@ export type InsertOrganizationRevenue = z.infer<typeof insertOrgRevenueSchema>;
 export type AiActionItem = typeof aiActionItems.$inferSelect;
 export type InsertAiActionItem = z.infer<typeof insertAiActionItemSchema>;
 
-// Add ACH information table
 export const achAccounts = pgTable("ach_accounts", {
   id: serial("id").primaryKey(),
   orgMemberId: integer("org_member_id").references(() => orgMembers.id).notNull(),
   bankName: text("bank_name").notNull(),
-  accountType: text("account_type").notNull(), // checking or savings
+  accountType: text("account_type").notNull(), 
   routingNumber: text("routing_number").notNull(),
   accountNumber: text("account_number").notNull(),
   isVerified: boolean("is_verified").default(false),
@@ -334,15 +332,14 @@ export const achTransactions = pgTable("ach_transactions", {
   id: serial("id").primaryKey(),
   achAccountId: integer("ach_account_id").references(() => achAccounts.id).notNull(),
   amount: real("amount").notNull(),
-  type: text("type").notNull(), // deposit or withdrawal
-  status: text("status").notNull(), // pending, completed, failed
+  type: text("type").notNull(), 
+  status: text("status").notNull(), 
   description: text("description"),
   transactionDate: timestamp("transaction_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Add relations for ACH tables
 export const achAccountRelations = relations(achAccounts, ({ one, many }) => ({
   orgMember: one(orgMembers, {
     fields: [achAccounts.orgMemberId],
@@ -358,7 +355,6 @@ export const achTransactionRelations = relations(achTransactions, ({ one }) => (
   }),
 }));
 
-// Add schemas for ACH tables
 export const insertAchAccountSchema = createInsertSchema(achAccounts).omit({
   id: true,
   isVerified: true,
@@ -375,14 +371,11 @@ export const insertAchTransactionSchema = createInsertSchema(achTransactions).om
   updatedAt: true,
 });
 
-// Add types for ACH tables
 export type InsertAchAccount = z.infer<typeof insertAchAccountSchema>;
 export type AchAccount = typeof achAccounts.$inferSelect;
 export type InsertAchTransaction = z.infer<typeof insertAchTransactionSchema>;
 export type AchTransaction = typeof achTransactions.$inferSelect;
 
-
-// Add compensation plan tables
 export const compensationPlans = pgTable("compensation_plans", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -420,15 +413,14 @@ export const commissionEntries = pgTable("commission_entries", {
   memberId: integer("member_id").references(() => orgMembers.id).notNull(),
   planId: integer("plan_id").references(() => compensationPlans.id).notNull(),
   amount: real("amount").notNull(),
-  type: text("type").notNull(), // base, override, bonus
-  source: text("source").notNull(), // personal_sale, team_override, etc.
-  status: text("status").notNull(), // pending, approved, paid
+  type: text("type").notNull(), 
+  source: text("source").notNull(), 
+  status: text("status").notNull(), 
   transactionDate: timestamp("transaction_date").notNull(),
   paidDate: timestamp("paid_date"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Add relations
 export const compensationPlanRelations = relations(compensationPlans, ({ many }) => ({
   tiers: many(compensationTiers),
   productRates: many(productCommissionRates),
@@ -441,7 +433,6 @@ export const compensationTierRelations = relations(compensationTiers, ({ one }) 
   }),
 }));
 
-// Add schemas
 export const insertCompensationPlanSchema = createInsertSchema(compensationPlans).omit({
   id: true,
   createdAt: true,
@@ -463,7 +454,6 @@ export const insertCommissionEntrySchema = createInsertSchema(commissionEntries)
   createdAt: true,
 });
 
-// Add types
 export type InsertCompensationPlan = z.infer<typeof insertCompensationPlanSchema>;
 export type CompensationPlan = typeof compensationPlans.$inferSelect;
 export type InsertCompensationTier = z.infer<typeof insertCompensationTierSchema>;
@@ -473,7 +463,6 @@ export type ProductCommissionRate = typeof productCommissionRates.$inferSelect;
 export type InsertCommissionEntry = z.infer<typeof insertCommissionEntrySchema>;
 export type CommissionEntry = typeof commissionEntries.$inferSelect;
 
-// Add commission template tables
 export const commissionTemplates = pgTable("commission_templates", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -486,12 +475,12 @@ export const commissionTemplates = pgTable("commission_templates", {
 export const commissionRules = pgTable("commission_rules", {
   id: serial("id").primaryKey(),
   templateId: integer("template_id").references(() => commissionTemplates.id).notNull(),
-  agentLevel: text("agent_level").notNull(), // associate, MD, RMD, etc.
+  agentLevel: text("agent_level").notNull(), 
   baseCommissionRate: real("base_commission_rate").notNull(),
   personalProductionRequirement: integer("personal_production_requirement"),
   teamProductionRequirement: integer("team_production_requirement"),
-  overrideRate: real("override_rate"), // percentage of team's production
-  maxOverrideDepth: integer("max_override_depth"), // how many levels down override applies
+  overrideRate: real("override_rate"), 
+  maxOverrideDepth: integer("max_override_depth"), 
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -500,21 +489,19 @@ export const bonusRules = pgTable("bonus_rules", {
   templateId: integer("template_id").references(() => commissionTemplates.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
-  threshold: integer("threshold").notNull(), // production threshold to qualify
-  bonusType: text("bonus_type").notNull(), // flat, percentage
+  threshold: integer("threshold").notNull(), 
+  bonusType: text("bonus_type").notNull(), 
   bonusValue: real("bonus_value").notNull(),
   isPeriodic: boolean("is_periodic").default(false),
-  periodType: text("period_type"), // monthly, quarterly, yearly
+  periodType: text("period_type"), 
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Add relations
 export const commissionTemplateRelations = relations(commissionTemplates, ({ many }) => ({
   rules: many(commissionRules),
   bonuses: many(bonusRules),
 }));
 
-// Add schemas
 export const insertCommissionTemplateSchema = createInsertSchema(commissionTemplates).omit({
   id: true,
   createdAt: true,
@@ -531,7 +518,6 @@ export const insertBonusRuleSchema = createInsertSchema(bonusRules).omit({
   createdAt: true,
 });
 
-// Add types
 export type InsertCommissionTemplate = z.infer<typeof insertCommissionTemplateSchema>;
 export type CommissionTemplate = typeof commissionTemplates.$inferSelect;
 export type InsertCommissionRule = z.infer<typeof insertCommissionRuleSchema>;
