@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import OpenAI from "openai";
 import { insertUserSchema } from "@shared/schema";
+import { orgMembers } from "@shared/schema";
+import { asc } from "drizzle-orm";
+import { db } from './db'; // Assuming db is defined elsewhere
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Code generation endpoint
@@ -102,6 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { referralCode, ...userData } = result.data;
       let referrerId = undefined;
 
+      // First try to find the referrer by referral code if provided
       if (referralCode) {
         const referrer = await storage.getUserByReferralCode(referralCode);
         if (referrer) {
@@ -109,18 +113,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const user = await storage.createUser({
-        ...userData,
-        referredBy: referrerId
-      });
+      // If no referral code or invalid code, assign to top agent
+      if (!referrerId) {
+        // Get the top-level agent (lowest level number)
+        const [topAgent] = await db
+          .select()
+          .from(orgMembers)
+          .orderBy(asc(orgMembers.level))
+          .limit(1);
 
-      // Generate a referral code for the new user
-      const newReferralCode = await storage.generateReferralCode(user.id);
+        if (topAgent) {
+          // Create user and associate with top agent
+          const user = await storage.createUser({
+            ...userData,
+            referredBy: topAgent.id
+          });
 
-      res.json({ 
-        ...user, 
-        referralCode: newReferralCode 
-      });
+          // Create org member entry for the new user
+          await storage.createMember({
+            name: userData.fullName,
+            designation: "Associate",
+            compensationPercentage: 5.0, // Starting compensation
+            yearlyIncome: 0,
+            level: topAgent.level + 1,
+            parentId: topAgent.id
+          });
+
+          // Generate a referral code for the new user
+          const newReferralCode = await storage.generateReferralCode(user.id);
+
+          res.json({ 
+            ...user, 
+            referralCode: newReferralCode 
+          });
+        } else {
+          return res.status(500).json({ error: 'No top agent found in the system' });
+        }
+      } else {
+        // Handle normal referral process
+        const user = await storage.createUser({
+          ...userData,
+          referredBy: referrerId
+        });
+
+        // Get the referrer's org member details
+        const referrerMember = await storage.getMember(referrerId);
+
+        if (referrerMember) {
+          // Create org member entry for the new user
+          await storage.createMember({
+            name: userData.fullName,
+            designation: "Associate",
+            compensationPercentage: 5.0,
+            yearlyIncome: 0,
+            level: referrerMember.level + 1,
+            parentId: referrerMember.id
+          });
+        }
+
+        // Generate a referral code for the new user
+        const newReferralCode = await storage.generateReferralCode(user.id);
+
+        res.json({ 
+          ...user, 
+          referralCode: newReferralCode 
+        });
+      }
     } catch (error) {
       console.error('Registration error:', error);
       res.status(500).json({ error: 'Failed to register user' });
