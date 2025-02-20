@@ -114,55 +114,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Check if we have any org members
-        const [existingMember] = await db
-          .select()
+        // Find John Maxwell (CEO) by name
+        const [ceo] = await db
+          .select({
+            userId: users.id,
+            memberId: orgMembers.id
+          })
           .from(orgMembers)
+          .innerJoin(users, eq(users.id, orgMembers.id))
+          .where(eq(orgMembers.name, 'John Maxwell'))
           .limit(1);
 
-        if (!existingMember) {
-          // If no org members exist, create the first one as CEO
-          await storage.createMember({
-            id: user.id,
-            name: userData.fullName,
-            designation: "CEO",
-            compensationPercentage: 78.0,
-            yearlyIncome: 0,
-            level: 1,
-            parentId: null
-          });
-        } else {
-          // Find the CEO (the member with level 1)
-          const [ceo] = await db
-            .select({
-              userId: users.id,
-              memberId: orgMembers.id
-            })
-            .from(orgMembers)
-            .innerJoin(users, eq(users.id, orgMembers.id))
-            .where(eq(orgMembers.level, 1))
-            .limit(1);
-
-          if (!ceo) {
-            throw new Error('Could not find CEO member');
-          }
-
-          // Create regular member under CEO
-          await storage.createMember({
-            id: user.id,
-            name: userData.fullName,
-            designation: "Associate",
-            compensationPercentage: 5.0,
-            yearlyIncome: 0,
-            level: 2, // CEO is level 1, all others are level 2 for now
-            parentId: ceo.memberId
-          });
-
-          // Update user with CEO's user ID as referrer
-          await storage.updateUser(user.id, {
-            referredBy: ceo.userId
-          });
+        if (!ceo) {
+          throw new Error('Could not find John Maxwell as CEO');
         }
+
+        // Create regular member under John Maxwell
+        await storage.createMember({
+          id: user.id,
+          name: userData.fullName,
+          designation: "Associate",
+          compensationPercentage: 5.0,
+          yearlyIncome: 0,
+          level: 2, // John Maxwell is level 1, all others are level 2 for now
+          parentId: ceo.memberId
+        });
+
+        // Update user with CEO's user ID as referrer
+        await storage.updateUser(user.id, {
+          referredBy: ceo.userId
+        });
 
         // Generate referral code
         const newReferralCode = await storage.generateReferralCode(user.id);
