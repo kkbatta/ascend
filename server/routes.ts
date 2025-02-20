@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import OpenAI from "openai";
 import { insertUserSchema } from "@shared/schema";
-import { orgMembers } from "@shared/schema";
+import { orgMembers, users } from "@shared/schema";
 import { asc, eq } from "drizzle-orm";
 import { db } from './db';
 
@@ -104,25 +104,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { referralCode, ...userData } = result.data;
 
-      // Create the user first without a referrer
+      // First check if we have any users
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .limit(1);
+
+      // Create the initial user without a referrer
       const user = await storage.createUser({
         ...userData,
         referredBy: null // Initialize with no referrer
       });
 
       try {
-        // Find the top-level user (the one whose org member has lowest level number)
-        const [topAgent] = await db
-          .select({
-            userId: orgMembers.id,
-            level: orgMembers.level
-          })
-          .from(orgMembers)
-          .orderBy(asc(orgMembers.level))
-          .limit(1);
-
-        if (!topAgent) {
-          // If no org structure exists, create the first member
+        if (!existingUser) {
+          // If no users exist, create the first member as CEO
           await storage.createMember({
             id: user.id,
             name: userData.fullName,
@@ -133,24 +129,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
             parentId: null
           });
         } else {
-          // Create regular member under top agent
+          // Find the CEO (top level member)
+          const [ceo] = await db
+            .select({
+              userId: users.id,
+              memberId: orgMembers.id,
+              level: orgMembers.level
+            })
+            .from(users)
+            .innerJoin(orgMembers, eq(users.id, orgMembers.id))
+            .orderBy(asc(orgMembers.level))
+            .limit(1);
+
+          if (!ceo) {
+            throw new Error('Could not find CEO user');
+          }
+
+          // Create regular member under CEO
           await storage.createMember({
             id: user.id,
             name: userData.fullName,
             designation: "Associate",
             compensationPercentage: 5.0,
             yearlyIncome: 0,
-            level: topAgent.level + 1,
-            parentId: topAgent.userId
+            level: ceo.level + 1,
+            parentId: ceo.memberId
           });
 
-          // Update user with referrer's user ID
+          // Update user with CEO's user ID as referrer
           await storage.updateUser(user.id, {
-            referredBy: topAgent.userId
+            referredBy: ceo.userId
           });
         }
 
-        // Generate a referral code for the new user
+        // Generate referral code
         const newReferralCode = await storage.generateReferralCode(user.id);
 
         res.json({ 
