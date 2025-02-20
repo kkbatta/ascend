@@ -21,7 +21,7 @@ import { apiRequest } from '@/lib/queryClient';
 
 // Helper function to generate random user data
 const generateRandomUser = () => {
-  const randomString = (length: number) => 
+  const randomString = (length: number) =>
     Math.random().toString(36).substring(2, 2 + length);
 
   const randomDate = () => {
@@ -83,6 +83,12 @@ const Register = () => {
 
       // Register user
       const response = await apiRequest('POST', '/api/register', data);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Registration failed');
+      }
+
       const user = await response.json();
 
       toast({
@@ -91,7 +97,8 @@ const Register = () => {
       });
 
       setLocation('/');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
         description: error.message,

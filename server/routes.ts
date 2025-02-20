@@ -99,7 +99,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = insertUserSchema.safeParse(req.body);
 
       if (!result.success) {
-        return res.status(400).json({ error: 'Invalid user data' });
+        return res.status(400).json({ 
+          error: 'Invalid user data',
+          details: result.error.errors 
+        });
       }
 
       const { referralCode, ...userData } = result.data;
@@ -168,14 +171,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...user, 
           referralCode: newReferralCode 
         });
-      } catch (error) {
+      } catch (error: any) {
         // If org member creation fails, clean up the user
         await storage.deleteUser(user.id);
-        throw error;
+        console.error('Organization member creation error:', error);
+        throw new Error(`Failed to create organization member: ${error.message}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      res.status(500).json({ error: 'Failed to register user' });
+      res.status(500).json({ 
+        error: 'Failed to register user',
+        details: error.message || 'Unknown error occurred'
+      });
     }
   });
 
