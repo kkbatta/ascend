@@ -7,17 +7,32 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email").notNull(),
+  fullName: text("full_name").notNull(),
+  dateOfBirth: timestamp("date_of_birth").notNull(),
+  aboutMe: text("about_me"),
+  membershipPaid: boolean("membership_paid").default(false),
   referralCode: text("referral_code").unique(),
   referredBy: integer("referred_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  referralCode: true,
-  referredBy: true,
-});
+export const insertUserSchema = createInsertSchema(users)
+  .pick({
+    username: true,
+    password: true,
+    email: true,
+    fullName: true,
+    dateOfBirth: true,
+    aboutMe: true,
+    referralCode: true,
+    referredBy: true,
+  })
+  .extend({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    dateOfBirth: z.string().transform((str) => new Date(str)),
+  });
 
 export const orgMembers = pgTable("org_members", {
   id: serial("id").primaryKey(),
