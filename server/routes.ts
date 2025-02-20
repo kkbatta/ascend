@@ -104,12 +104,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { referralCode, ...userData } = result.data;
 
-      // First check if we have any users
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .limit(1);
-
       // Create the initial user without a referrer
       const user = await storage.createUser({
         ...userData,
@@ -117,8 +111,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        if (!existingUser) {
-          // If no users exist, create the first member as CEO
+        // Check if we have any org members
+        const [existingMember] = await db
+          .select()
+          .from(orgMembers)
+          .limit(1);
+
+        if (!existingMember) {
+          // If no org members exist, create the first one as CEO
           await storage.createMember({
             id: user.id,
             name: userData.fullName,
@@ -129,20 +129,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             parentId: null
           });
         } else {
-          // Find the CEO (top level member)
+          // Find the CEO (the member with level 1)
           const [ceo] = await db
             .select({
               userId: users.id,
-              memberId: orgMembers.id,
-              level: orgMembers.level
+              memberId: orgMembers.id
             })
-            .from(users)
-            .innerJoin(orgMembers, eq(users.id, orgMembers.id))
-            .orderBy(asc(orgMembers.level))
+            .from(orgMembers)
+            .innerJoin(users, eq(users.id, orgMembers.id))
+            .where(eq(orgMembers.level, 1))
             .limit(1);
 
           if (!ceo) {
-            throw new Error('Could not find CEO user');
+            throw new Error('Could not find CEO member');
           }
 
           // Create regular member under CEO
@@ -152,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             designation: "Associate",
             compensationPercentage: 5.0,
             yearlyIncome: 0,
-            level: ceo.level + 1,
+            level: 2, // CEO is level 1, all others are level 2 for now
             parentId: ceo.memberId
           });
 
