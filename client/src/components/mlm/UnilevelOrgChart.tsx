@@ -23,7 +23,7 @@ interface UnilevelOrgChartProps {
   onSelectMember?: (member: OrgMember) => void;
 }
 
-const designationColors = {
+const designationColors: Record<string, string> = {
   'CEO': 'bg-purple-100 text-purple-800 border-purple-300',
   'CEOMD': 'bg-indigo-100 text-indigo-800 border-indigo-300',
   'RMD': 'bg-blue-100 text-blue-800 border-blue-300',
@@ -31,6 +31,12 @@ const designationColors = {
   'SFC': 'bg-emerald-100 text-emerald-800 border-emerald-300',
   'SEFC': 'bg-teal-100 text-teal-800 border-teal-300',
   'Associate': 'bg-gray-100 text-gray-800 border-gray-300'
+};
+
+const getDesignationColor = (designation: string) => {
+  const colorClass = designationColors[designation] || 'bg-gray-100 text-gray-800 border-gray-300';
+  const borderClass = colorClass.split(' ')[0].replace('bg-', 'border-');
+  return { colorClass, borderClass };
 };
 
 const formatCurrency = (amount: number) => {
@@ -86,8 +92,8 @@ const createFilteredTree = (
     const nextNode = { ...path[i] };
     // Only include children that match designation filter or are in the path
     if (path[i].children) {
-      nextNode.children = path[i].children.filter(child => 
-        filterDesignation === 'All' || 
+      nextNode.children = path[i].children.filter(child =>
+        filterDesignation === 'All' ||
         child.designation === filterDesignation ||
         path.some(p => p.id === child.id)
       );
@@ -157,6 +163,7 @@ const MemberNode: React.FC<{
 }) => {
   const hasChildren = member.children && member.children.length > 0;
   const shouldShow = !filterDesignation || filterDesignation === 'All' || member.designation === filterDesignation;
+  const { colorClass, borderClass } = getDesignationColor(member.designation);
 
   if (!shouldShow) {
     return null;
@@ -165,11 +172,11 @@ const MemberNode: React.FC<{
   return (
     <div className="flex flex-col items-center">
       <div className="relative">
-        <Card 
+        <Card
           className={cn(
             "w-72 hover:shadow-lg transition-shadow duration-200 border-2",
             onSelectMember && "hover:ring-2 hover:ring-blue-500",
-            designationColors[member.designation as keyof typeof designationColors].split(' ')[0].replace('bg-', 'border-')
+            borderClass
           )}
           onClick={() => onSelectMember?.(member)}
         >
@@ -196,9 +203,7 @@ const MemberNode: React.FC<{
                   )}
                   <h3 className="font-semibold text-lg">{member.name}</h3>
                 </div>
-                <Badge 
-                  className={`${designationColors[member.designation as keyof typeof designationColors]} border px-2 py-1`}
-                >
+                <Badge className={colorClass}>
                   {member.designation}
                 </Badge>
               </div>
@@ -230,7 +235,7 @@ const MemberNode: React.FC<{
               <div key={child.id} className="relative">
                 {array.length > 1 && (
                   <>
-                    <div 
+                    <div
                       className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 h-0.5 bg-gray-300 shadow-sm"
                       style={{
                         width: index === 0 ? '50%' : index === array.length - 1 ? '50%' : '100%',
@@ -245,7 +250,7 @@ const MemberNode: React.FC<{
                     )}
                   </>
                 )}
-                <MemberNode 
+                <MemberNode
                   member={child}
                   filterDesignation={filterDesignation}
                   onSelectMember={onSelectMember}
@@ -288,7 +293,7 @@ export const UnilevelOrgChart: React.FC<UnilevelOrgChartProps> = ({
 
   return (
     <div className="p-8 overflow-x-auto min-w-max">
-      <MemberNode 
+      <MemberNode
         member={filteredData}
         filterDesignation={filterDesignation}
         onSelectMember={onSelectMember}
