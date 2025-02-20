@@ -111,9 +111,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Get the top-level agent (lowest level number)
+        // Find the top-level user (the one whose org member has lowest level number)
         const [topAgent] = await db
-          .select()
+          .select({
+            userId: orgMembers.id,
+            level: orgMembers.level
+          })
           .from(orgMembers)
           .orderBy(asc(orgMembers.level))
           .limit(1);
@@ -121,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!topAgent) {
           // If no org structure exists, create the first member
           await storage.createMember({
-            id: user.id, // Use the new user's ID
+            id: user.id,
             name: userData.fullName,
             designation: "CEO",
             compensationPercentage: 78.0,
@@ -132,18 +135,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           // Create regular member under top agent
           await storage.createMember({
-            id: user.id, // Use the new user's ID
+            id: user.id,
             name: userData.fullName,
             designation: "Associate",
             compensationPercentage: 5.0,
             yearlyIncome: 0,
             level: topAgent.level + 1,
-            parentId: topAgent.id
+            parentId: topAgent.userId
           });
 
-          // Update user with referrer after member is created
+          // Update user with referrer's user ID
           await storage.updateUser(user.id, {
-            referredBy: topAgent.id
+            referredBy: topAgent.userId
           });
         }
 
