@@ -3,7 +3,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { UnilevelOrgChart } from '@/components/mlm/UnilevelOrgChart';
 import { OrgActions } from '@/components/mlm/OrgActions';
 import { useToast } from '@/hooks/use-toast';
-import { mockOrgData } from '@/lib/mock-data';
+import { useQuery } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 
 interface OrgMember {
   id: string;
@@ -21,6 +22,18 @@ const Associates = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<OrgMember[]>([]);
   const { toast } = useToast();
+
+  // Fetch organization hierarchy data
+  const { data: orgData, isLoading, error } = useQuery({
+    queryKey: ['/api/org-hierarchy'],
+    queryFn: async () => {
+      const response = await fetch('/api/org-hierarchy');
+      if (!response.ok) {
+        throw new Error('Failed to fetch organization data');
+      }
+      return response.json();
+    }
+  });
 
   const handleMemberSelect = (member: OrgMember) => {
     setSelectedMembers(prev => {
@@ -78,6 +91,22 @@ const Associates = () => {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        Error loading organization data. Please try again later.
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="max-w-[1600px] mx-auto">
@@ -112,7 +141,7 @@ const Associates = () => {
           <CardContent className="overflow-x-auto">
             <div className="min-w-max">
               <UnilevelOrgChart
-                data={mockOrgData}
+                data={orgData}
                 filterDesignation={selectedDesignation}
                 searchQuery={searchQuery}
                 onSelectMember={handleMemberSelect}

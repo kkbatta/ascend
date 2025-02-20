@@ -4,8 +4,8 @@ import { storage } from "./storage";
 import OpenAI from "openai";
 import { insertUserSchema } from "@shared/schema";
 import { orgMembers } from "@shared/schema";
-import { asc } from "drizzle-orm";
-import { db } from './db'; // Assuming db is defined elsewhere
+import { asc, eq } from "drizzle-orm";
+import { db } from './db';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Code generation endpoint
@@ -182,6 +182,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Registration error:', error);
       res.status(500).json({ error: 'Failed to register user' });
+    }
+  });
+
+  // Add new endpoint for fetching organization hierarchy
+  app.get('/api/org-hierarchy', async (req, res) => {
+    try {
+      // Get all org members ordered by level
+      const members = await db
+        .select()
+        .from(orgMembers)
+        .orderBy(asc(orgMembers.level));
+
+      // Transform flat data into hierarchical structure
+      const buildHierarchy = (parentId: number | null = null) => {
+        return members
+          .filter(m => m.parentId === parentId)
+          .map(member => ({
+            id: member.id.toString(),
+            name: member.name,
+            designation: member.designation,
+            compensationPercentage: member.compensationPercentage,
+            yearlyIncome: member.yearlyIncome,
+            level: member.level,
+            children: buildHierarchy(member.id)
+          }));
+      };
+
+      const hierarchy = buildHierarchy();
+      res.json(hierarchy);
+    } catch (error) {
+      console.error('Error fetching org hierarchy:', error);
+      res.status(500).json({ error: 'Failed to fetch organization hierarchy' });
     }
   });
 
