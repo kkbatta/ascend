@@ -35,8 +35,7 @@ const designationColors: Record<string, string> = {
 
 const getDesignationColor = (designation: string) => {
   const colorClass = designationColors[designation] || 'bg-gray-100 text-gray-800 border-gray-300';
-  const borderClass = colorClass.split(' ')[0].replace('bg-', 'border-');
-  return { colorClass, borderClass };
+  return { colorClass };
 };
 
 const formatCurrency = (amount: number) => {
@@ -163,7 +162,7 @@ const MemberNode: React.FC<{
 }) => {
   const hasChildren = member.children && member.children.length > 0;
   const shouldShow = !filterDesignation || filterDesignation === 'All' || member.designation === filterDesignation;
-  const { colorClass, borderClass } = getDesignationColor(member.designation);
+  const { colorClass } = getDesignationColor(member.designation);
 
   if (!shouldShow) {
     return null;
@@ -176,7 +175,7 @@ const MemberNode: React.FC<{
           className={cn(
             "w-72 hover:shadow-lg transition-shadow duration-200 border-2",
             onSelectMember && "hover:ring-2 hover:ring-blue-500",
-            borderClass
+            colorClass.split(' ')[0].replace('bg-', 'border-')
           )}
           onClick={() => onSelectMember?.(member)}
         >
