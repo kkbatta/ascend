@@ -103,18 +103,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { referralCode, ...userData } = result.data;
-      let referrerId = undefined;
 
-      // First try to find the referrer by referral code if provided
-      if (referralCode) {
-        const referrer = await storage.getUserByReferralCode(referralCode);
-        if (referrer) {
-          referrerId = referrer.id;
-        }
-      }
+      // Create the user first without a referrer
+      const user = await storage.createUser({
+        ...userData,
+        referredBy: null // Initialize with no referrer
+      });
 
-      // If no referral code or invalid code, assign to top agent
-      if (!referrerId) {
+      try {
         // Get the top-level agent (lowest level number)
         const [topAgent] = await db
           .select()
@@ -122,52 +118,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .orderBy(asc(orgMembers.level))
           .limit(1);
 
-        if (topAgent) {
-          // Create user and associate with top agent
-          const user = await storage.createUser({
-            ...userData,
-            referredBy: topAgent.id
-          });
-
-          // Create org member entry for the new user
+        if (!topAgent) {
+          // If no org structure exists, create the first member
           await storage.createMember({
+            id: user.id, // Use the new user's ID
+            name: userData.fullName,
+            designation: "CEO",
+            compensationPercentage: 78.0,
+            yearlyIncome: 0,
+            level: 1,
+            parentId: null
+          });
+        } else {
+          // Create regular member under top agent
+          await storage.createMember({
+            id: user.id, // Use the new user's ID
             name: userData.fullName,
             designation: "Associate",
-            compensationPercentage: 5.0, // Starting compensation
+            compensationPercentage: 5.0,
             yearlyIncome: 0,
             level: topAgent.level + 1,
             parentId: topAgent.id
           });
 
-          // Generate a referral code for the new user
-          const newReferralCode = await storage.generateReferralCode(user.id);
-
-          res.json({ 
-            ...user, 
-            referralCode: newReferralCode 
-          });
-        } else {
-          return res.status(500).json({ error: 'No top agent found in the system' });
-        }
-      } else {
-        // Handle normal referral process
-        const user = await storage.createUser({
-          ...userData,
-          referredBy: referrerId
-        });
-
-        // Get the referrer's org member details
-        const referrerMember = await storage.getMember(referrerId);
-
-        if (referrerMember) {
-          // Create org member entry for the new user
-          await storage.createMember({
-            name: userData.fullName,
-            designation: "Associate",
-            compensationPercentage: 5.0,
-            yearlyIncome: 0,
-            level: referrerMember.level + 1,
-            parentId: referrerMember.id
+          // Update user with referrer after member is created
+          await storage.updateUser(user.id, {
+            referredBy: topAgent.id
           });
         }
 
@@ -178,6 +154,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ...user, 
           referralCode: newReferralCode 
         });
+      } catch (error) {
+        // If org member creation fails, clean up the user
+        await storage.deleteUser(user.id);
+        throw error;
       }
     } catch (error) {
       console.error('Registration error:', error);
