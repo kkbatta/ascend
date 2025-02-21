@@ -32,7 +32,14 @@ const providers = [
 
 // Generate mock data for the last 12 months
 const generateMockData = () => {
-  const mockData = [];
+  const mockData: Array<{
+    date: string;
+    provider: string;
+    revenue: number;
+    policyCount: number;
+    averagePremium: number;
+    productType: string;
+  }> = [];
   const now = new Date();
 
   for (let i = 0; i < 12; i++) {
@@ -62,7 +69,6 @@ export const ProviderMetricsReport = () => {
     queryKey: ['providerMetrics', dateRange, selectedProductType],
     queryFn: async () => {
       // In a real app, this would be an API call
-      // For now, we'll return our generated mock data
       const allData = generateMockData();
       return allData.filter(item => {
         const itemDate = new Date(item.date);
@@ -75,19 +81,49 @@ export const ProviderMetricsReport = () => {
     }
   });
 
-  const transformedData = providers.map(provider => ({
-    provider,
-    revenue: metrics
-      .filter(m => m.provider === provider)
-      .reduce((sum, m) => sum + m.revenue, 0),
-    policies: metrics
-      .filter(m => m.provider === provider)
-      .reduce((sum, m) => sum + m.policyCount, 0),
-    avgPremium: metrics
-      .filter(m => m.provider === provider)
-      .reduce((sum, m) => sum + m.averagePremium, 0) / 
-      metrics.filter(m => m.provider === provider).length || 0
-  }));
+  const transformedData = providers.map(provider => {
+    const providerMetrics = metrics.filter(m => m.provider === provider);
+    const totalRevenue = providerMetrics.reduce((sum, m) => sum + m.revenue, 0);
+    const totalPolicies = providerMetrics.reduce((sum, m) => sum + m.policyCount, 0);
+    const avgPremium = Math.round(totalRevenue / totalPolicies);
+
+    return {
+      provider,
+      revenue: totalRevenue,
+      policies: totalPolicies,
+      avgPremium: avgPremium || 0
+    };
+  });
+
+  const formatYAxis = (value: number, metric: string) => {
+    if (metric === 'revenue') {
+      return `$${(value / 1000000).toFixed(1)}M`;
+    } else if (metric === 'policies') {
+      return value.toFixed(0);
+    } else {
+      return `$${value.toLocaleString()}`;
+    }
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-4 border rounded-lg shadow-lg">
+          <p className="font-medium mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {
+                entry.name === 'Revenue' ? `$${entry.value.toLocaleString()}` :
+                entry.name === 'Policies' ? entry.value.toLocaleString() :
+                `$${entry.value.toLocaleString()}`
+              }
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <Card className="p-6">
@@ -127,14 +163,36 @@ export const ProviderMetricsReport = () => {
               <BarChart data={transformedData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="provider" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value: number) => `$${value.toLocaleString()}`}
+                <YAxis 
+                  yAxisId="revenue"
+                  orientation="left"
+                  tickFormatter={(value) => formatYAxis(value, 'revenue')}
                 />
+                <YAxis 
+                  yAxisId="policies"
+                  orientation="right"
+                  tickFormatter={(value) => formatYAxis(value, 'policies')}
+                />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey="revenue" name="Revenue" fill="#8884d8" />
-                <Bar dataKey="policies" name="Policies" fill="#82ca9d" />
-                <Bar dataKey="avgPremium" name="Avg Premium" fill="#ffc658" />
+                <Bar 
+                  yAxisId="revenue"
+                  dataKey="revenue" 
+                  name="Revenue" 
+                  fill="#8884d8" 
+                />
+                <Bar 
+                  yAxisId="policies"
+                  dataKey="policies" 
+                  name="Policies" 
+                  fill="#82ca9d" 
+                />
+                <Bar 
+                  yAxisId="revenue"
+                  dataKey="avgPremium" 
+                  name="Avg Premium" 
+                  fill="#ffc658" 
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
