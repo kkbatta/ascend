@@ -58,7 +58,7 @@ export const AscendLogo = ({ width = 180, height = 90 }) => (
         fontWeight="bold" 
         fill="#4F46E5"
       >
-        ASCEND
+        ELEVATE
       </text>
       <text 
         x="0" y="25" 
