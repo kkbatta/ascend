@@ -6,11 +6,35 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add a shutdown flag to track server state
+let isShuttingDown = false;
+
+// Add shutdown endpoint (secured with an environment variable)
+app.post('/api/admin/shutdown', (req, res) => {
+  const authToken = req.headers.authorization;
+  if (authToken !== `Bearer ${process.env.ADMIN_SECRET}`) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  isShuttingDown = true;
+  res.json({ message: 'Server shutdown initiated' });
+
+  // Give time for existing connections to close
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+});
+
 // Add CORS middleware for production
 app.use((req, res, next) => {
+  if (isShuttingDown) {
+    res.status(503).json({ message: 'Service is shutting down' });
+    return;
+  }
+
   const allowedOrigins = [
-    'https://[your-repl-name].[your-username].repl.co', // Add your Replit domain
-    process.env.CUSTOM_DOMAIN, // Will be your GoDaddy domain
+    'https://[your-repl-name].[your-username].repl.co',
+    process.env.CUSTOM_DOMAIN,
   ].filter(Boolean);
 
   const origin = req.headers.origin;
@@ -62,7 +86,7 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    console.error(err); // Add error logging
+    console.error(err);
   });
 
   if (app.get("env") === "development") {
@@ -71,9 +95,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
   const PORT = process.env.PORT || 5000;
-  server.listen(PORT, "0.0.0.0", () => {
+  server.listen(PORT, () => {
     log(`Server running in ${app.get("env")} mode on port ${PORT}`);
   });
 })();
