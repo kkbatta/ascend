@@ -98,11 +98,11 @@ export default function AuthPage() {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-500 to-purple-600 flex flex-col items-center justify-center p-8 text-white">
+      <div className="bg-gradient-to-br from-purple-600 to-indigo-800 flex flex-col items-center justify-center p-8 text-white">
         <AscendLogo width={320} height={160} />
         <div className="mt-8 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Manage Your MLM Business
+            Manage your Business like a real Boss
           </h2>
           <p className="text-xl opacity-90">
             Access comprehensive analytics, team performance metrics, and advanced commission tracking
