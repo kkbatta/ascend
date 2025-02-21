@@ -81,6 +81,7 @@ export const ProviderMetricsReport = () => {
     }
   });
 
+  // Transform and normalize data for better visualization
   const transformedData = providers.map(provider => {
     const providerMetrics = metrics.filter(m => m.provider === provider);
     const totalRevenue = providerMetrics.reduce((sum, m) => sum + m.revenue, 0);
@@ -91,17 +92,22 @@ export const ProviderMetricsReport = () => {
       provider,
       revenue: totalRevenue,
       policies: totalPolicies,
-      avgPremium: avgPremium || 0
+      avgPremium: avgPremium,
+      // Normalize average premium to be visually comparable
+      normalizedPremium: avgPremium * 100 // Scale up for visibility
     };
   });
 
-  const formatYAxis = (value: number, metric: string) => {
-    if (metric === 'revenue') {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    } else if (metric === 'policies') {
-      return value.toFixed(0);
-    } else {
-      return `$${value.toLocaleString()}`;
+  const formatValue = (value: number, metric: string) => {
+    switch (metric) {
+      case 'revenue':
+        return `$${(value / 1000000).toFixed(1)}M`;
+      case 'policies':
+        return value.toLocaleString();
+      case 'premium':
+        return `$${value.toLocaleString()}`;
+      default:
+        return value.toLocaleString();
     }
   };
 
@@ -110,15 +116,24 @@ export const ProviderMetricsReport = () => {
       return (
         <div className="bg-white p-4 border rounded-lg shadow-lg">
           <p className="font-medium mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }}>
-              {entry.name}: {
-                entry.name === 'Revenue' ? `$${entry.value.toLocaleString()}` :
-                entry.name === 'Policies' ? entry.value.toLocaleString() :
-                `$${entry.value.toLocaleString()}`
-              }
-            </p>
-          ))}
+          {payload.map((entry: any) => {
+            let value = entry.value;
+            let formattedValue = value;
+
+            // Convert normalized premium back to actual value for display
+            if (entry.dataKey === 'normalizedPremium') {
+              value = value / 100;
+              formattedValue = `$${value.toLocaleString()}`;
+            } else if (entry.dataKey === 'revenue') {
+              formattedValue = `$${value.toLocaleString()}`;
+            }
+
+            return (
+              <p key={entry.dataKey} style={{ color: entry.color }}>
+                {entry.dataKey === 'normalizedPremium' ? 'Avg Premium' : entry.name}: {formattedValue}
+              </p>
+            );
+          })}
         </div>
       );
     }
@@ -163,35 +178,40 @@ export const ProviderMetricsReport = () => {
               <BarChart data={transformedData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="provider" />
-                <YAxis 
+                <YAxis
                   yAxisId="revenue"
                   orientation="left"
-                  tickFormatter={(value) => formatYAxis(value, 'revenue')}
+                  tickFormatter={(value) => formatValue(value, 'revenue')}
                 />
-                <YAxis 
+                <YAxis
                   yAxisId="policies"
                   orientation="right"
-                  tickFormatter={(value) => formatYAxis(value, 'policies')}
+                  tickFormatter={(value) => formatValue(value, 'policies')}
+                />
+                <YAxis
+                  yAxisId="premium"
+                  orientation="right"
+                  tickFormatter={(value) => formatValue(value / 100, 'premium')}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar 
+                <Bar
                   yAxisId="revenue"
-                  dataKey="revenue" 
-                  name="Revenue" 
-                  fill="#8884d8" 
+                  dataKey="revenue"
+                  name="Revenue"
+                  fill="#8884d8"
                 />
-                <Bar 
+                <Bar
                   yAxisId="policies"
-                  dataKey="policies" 
-                  name="Policies" 
-                  fill="#82ca9d" 
+                  dataKey="policies"
+                  name="Policies"
+                  fill="#82ca9d"
                 />
-                <Bar 
-                  yAxisId="revenue"
-                  dataKey="avgPremium" 
-                  name="Avg Premium" 
-                  fill="#ffc658" 
+                <Bar
+                  yAxisId="premium"
+                  dataKey="normalizedPremium"
+                  name="Avg Premium"
+                  fill="#ffc658"
                 />
               </BarChart>
             </ResponsiveContainer>
