@@ -1,13 +1,10 @@
-import { hashPassword } from "./auth";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function updateSuperAdminPassword() {
-  const hashedPassword = await hashPassword("WideOpenThrottle");
-
   await db.update(users)
-    .set({ password: hashedPassword })
+    .set({ password: "123456789" })
     .where(
       and(
         eq(users.username, "kk"),
