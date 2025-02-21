@@ -33,9 +33,10 @@ app.use((req, res, next) => {
   }
 
   const allowedOrigins = [
+    'https://elevatefinancial.life',
+    'https://www.elevatefinancial.life',
     process.env.CUSTOM_DOMAIN,
     process.env.REPLIT_DOMAIN,
-    'https://ascendagentsea.yourdomain.com', // This will be replaced with your actual domain
     ...((process.env.ADDITIONAL_DOMAINS || '').split(',').filter(Boolean))
   ].filter(Boolean);
 
@@ -46,6 +47,12 @@ app.use((req, res, next) => {
     // In development, be more permissive
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
+
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
