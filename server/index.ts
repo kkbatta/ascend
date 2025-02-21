@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
+import { updateSuperAdminPassword } from "./update-password";
 
 const app = express();
 app.use(express.json());
@@ -93,27 +94,36 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Set up authentication before routes
-  await setupAuth(app);
+  try {
+    // Update super admin password first
+    await updateSuperAdminPassword();
+    log("Successfully updated super admin password");
 
-  const server = await registerRoutes(app);
+    // Set up authentication before routes
+    await setupAuth(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const server = await registerRoutes(app);
 
-    res.status(status).json({ message });
-    console.error(err);
-  });
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+      res.status(status).json({ message });
+      console.error(err);
+    });
+
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    const PORT = Number(process.env.PORT) || 5000;
+    server.listen(PORT, () => {
+      log(`Server running in ${app.get("env")} mode on port ${PORT}`);
+    });
+  } catch (error) {
+    log(`Failed to start server: ${error}`);
+    process.exit(1);
   }
-
-  const PORT = Number(process.env.PORT) || 5000;
-  server.listen(PORT, () => {
-    log(`Server running in ${app.get("env")} mode on port ${PORT}`);
-  });
 })();
