@@ -18,10 +18,13 @@ export async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  // If stored password is not in hash.salt format, do direct comparison
   if (!stored || !stored.includes(".")) {
-    log(`Invalid stored password format: ${stored}`);
-    return false;
+    log(`Simple password comparison for: ${stored}`);
+    return supplied === stored;
   }
+
+  // Otherwise do the secure hash comparison
   const [hashed, salt] = stored.split(".");
   if (!hashed || !salt) {
     log(`Missing hash or salt in stored password: ${stored}`);
