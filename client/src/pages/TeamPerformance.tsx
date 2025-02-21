@@ -129,86 +129,103 @@ const TeamPerformance = () => {
       const productInfo = productDetails[product as keyof typeof productDetails];
       const sellingPoints = [];
 
-      // Age-based recommendations
+      // Enhanced Age-based recommendations
       if (prospect.age >= 55) {
         if (product === 'SecureHorizon') {
           sellingPoints.push(
-            `With your experience of ${prospect.age} years, SecureHorizon's guaranteed income feature will provide the stability you've earned.`,
-            `As someone who's built significant wealth over your career, our principal protection ensures your hard-earned assets are secure.`,
-            `The tax-deferred growth aligns perfectly with your retirement planning needs.`
+            `With your ${prospect.age} years of experience, SecureHorizon's guaranteed income feature aligns perfectly with your retirement planning needs.`,
+            `Our principal protection ensures your wealth is secure while maintaining growth potential.`,
+            `You'll particularly appreciate our tax-deferred growth strategy which optimizes retirement income.`
+          );
+        } else if (product === 'Prolife IUL') {
+          sellingPoints.push(
+            `At ${prospect.age}, our living benefits feature provides both immediate protection and long-term value.`,
+            `The flexibility in premium payments accommodates your established financial position.`
           );
         }
       } else if (prospect.age >= 35 && prospect.age < 55) {
         if (product === 'Sunflower Annuity') {
           sellingPoints.push(
-            `At your career stage, Sunflower Annuity's flexible premium options give you the freedom to invest as your income grows.`,
-            `You're in your peak earning years - our competitive rates will help maximize your wealth accumulation.`,
-            `The multiple investment choices let you balance growth with security, perfect for your career stage.`
+            `At your career peak age of ${prospect.age}, Sunflower Annuity's flexible premium options maximize your earning potential.`,
+            `Our competitive rates are designed to accelerate wealth accumulation during your prime earning years.`,
+            `The multiple investment choices allow you to balance growth with security, perfect for your career stage.`
           );
         }
       }
 
-      // Family status considerations
-      if (prospect.familyStatus.toLowerCase().includes('kid') ||
-          prospect.familyStatus.toLowerCase().includes('expecting')) {
-        if (product === 'Prolife IUL') {
-          sellingPoints.push(
-            `As a family person, Prolife IUL's living benefits ensure your loved ones are protected while building valuable assets.`,
-            `The flexible premium payments adapt to your family's changing needs, especially important with children's expenses.`,
-            `Think of it as a safety net that grows with your family, providing both protection and investment opportunities.`
-          );
-        }
-      }
-
-      // Income-based recommendations
+      // Enhanced Income-based recommendations
       if (prospect.income >= 150000) {
         if (product === 'SecureHorizon') {
           sellingPoints.push(
-            `Your income level puts you in an ideal position to maximize SecureHorizon's tax advantages.`,
-            `With your strong earning position, you can take full advantage of our premium contribution limits.`
+            `Your income of $${prospect.income.toLocaleString()} positions you perfectly to maximize SecureHorizon's tax advantages.`,
+            `Our premium structure is optimized for high-income professionals like yourself.`,
+            `You can leverage our maximum contribution limits to optimize tax benefits.`
           );
         }
       } else if (prospect.income >= 75000) {
         if (product === 'Sunflower Annuity') {
           sellingPoints.push(
-            `The Sunflower Annuity's flexible contribution structure works well with your income level.`,
-            `You can start building your retirement nest egg while maintaining financial flexibility.`
+            `With your income of $${prospect.income.toLocaleString()}, our flexible contribution structure allows for strategic financial planning.`,
+            `You can start building your retirement nest egg while maintaining financial flexibility.`,
+            `Our competitive rates help maximize your investment potential within your income bracket.`
           );
         }
       }
 
-      // Investment style and risk tolerance
+      // Enhanced Family Status considerations
+      if (prospect.familyStatus.toLowerCase().includes('kid') ||
+          prospect.familyStatus.toLowerCase().includes('expecting')) {
+        if (product === 'Prolife IUL') {
+          sellingPoints.push(
+            `As a family person with ${prospect.familyStatus}, our living benefits ensure comprehensive protection for your loved ones.`,
+            `The flexible premium payments adapt to your growing family's changing needs.`,
+            `Our death benefit with living benefits feature provides both immediate family protection and long-term financial security.`
+          );
+        } else if (product === 'Sunflower Annuity') {
+          sellingPoints.push(
+            `With your family status of ${prospect.familyStatus}, our education funding options provide excellent college planning opportunities.`,
+            `The flexible premium structure accommodates changing family expenses.`
+          );
+        }
+      }
+
+      // Enhanced Risk Tolerance considerations
       if (prospect.riskTolerance.toLowerCase() === 'conservative') {
         if (product === 'SecureHorizon') {
           sellingPoints.push(
-            `As a conservative investor, you'll appreciate our guaranteed minimum returns.`,
-            `Our principal protection feature aligns perfectly with your careful approach to wealth management.`
+            `Your conservative investment approach aligns perfectly with our guaranteed minimum returns.`,
+            `Our principal protection feature provides the security you prioritize.`,
+            `The steady, predictable growth matches your risk comfort level.`
           );
         }
       } else if (prospect.riskTolerance.toLowerCase() === 'aggressive') {
         if (product === 'Prolife IUL') {
           sellingPoints.push(
-            `For someone comfortable with market dynamics like yourself, our variable investment options offer greater growth potential.`,
-            `You can leverage market opportunities while maintaining the security of a life insurance base.`
+            `For your aggressive risk profile, our variable investment options offer significant growth potential.`,
+            `You can maximize market opportunities while maintaining a secure insurance foundation.`,
+            `Our flexible investment strategies allow you to adjust risk exposure based on market conditions.`
           );
         }
       }
 
-      // Current investment portfolio considerations
-      if (prospect.currentInvestments.some(inv => inv.toLowerCase().includes('401k') ||
+      // Enhanced Portfolio Alignment
+      if (prospect.currentInvestments.some(inv =>
+          inv.toLowerCase().includes('401k') ||
           inv.toLowerCase().includes('pension'))) {
         sellingPoints.push(
-          `This product complements your existing retirement accounts, providing additional tax advantages.`,
-          `You can diversify your retirement strategy beyond your current portfolio.`
+          `This product perfectly complements your existing ${prospect.currentInvestments.join(', ')} portfolio.`,
+          `You'll benefit from additional tax advantages beyond your current retirement accounts.`,
+          `Our features provide diversification benefits to your existing retirement strategy.`
         );
       }
 
-      // Occupation-specific points
+      // Enhanced Occupation-specific recommendations
       if (prospect.occupation.toLowerCase().includes('business') ||
           prospect.occupation.toLowerCase().includes('entrepreneur')) {
         sellingPoints.push(
-          `As a business professional, you'll appreciate the flexibility in premium payments that accommodates variable income streams.`,
-          `This product can be integrated into your business succession planning strategy.`
+          `As a ${prospect.occupation}, you'll appreciate our flexible premium payment schedule that accommodates variable income streams.`,
+          `This product can be integrated into your business succession planning strategy.`,
+          `The tax advantages align well with business owner financial planning needs.`
         );
       }
 
@@ -275,22 +292,64 @@ const TeamPerformance = () => {
                 {selectedProspect && (
                   <Card className="mb-6">
                     <CardHeader>
-                      <CardTitle>Prospect Profile</CardTitle>
+                      <CardTitle>Prospect Profile Analysis</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="font-semibold mb-2">Personal Information</h4>
-                          <p>Name: {selectedProspect.name}</p>
-                          <p>Age: {selectedProspect.age}</p>
-                          <p>Occupation: {selectedProspect.occupation}</p>
-                          <p>Family Status: {selectedProspect.familyStatus}</p>
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Personal Information</h4>
+                            <div className="space-y-2">
+                              <p><span className="font-medium">Name:</span> {selectedProspect.name}</p>
+                              <p><span className="font-medium">Age:</span> {selectedProspect.age}</p>
+                              <p><span className="font-medium">Occupation:</span> {selectedProspect.occupation}</p>
+                              <p><span className="font-medium">Family Status:</span> {selectedProspect.familyStatus}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2">Financial Profile</h4>
+                            <div className="space-y-2">
+                              <p><span className="font-medium">Income:</span> ${selectedProspect.income.toLocaleString()}</p>
+                              <p><span className="font-medium">Risk Tolerance:</span> {selectedProspect.riskTolerance}</p>
+                              <div>
+                                <span className="font-medium">Current Investments:</span>
+                                <ul className="list-disc ml-6 mt-1">
+                                  {selectedProspect.currentInvestments.map((inv, idx) => (
+                                    <li key={idx}>{inv}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold mb-2">Financial Profile</h4>
-                          <p>Income: ${selectedProspect.income.toLocaleString()}</p>
-                          <p>Risk Tolerance: {selectedProspect.riskTolerance}</p>
-                          <p>Current Investments: {selectedProspect.currentInvestments.join(', ')}</p>
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h4 className="font-semibold mb-2">Key Recommendations</h4>
+                          <div className="space-y-2">
+                            {selectedProspect.age >= 55 && (
+                              <div className="flex items-start gap-2">
+                                <Target className="w-5 h-5 text-blue-500 mt-1" />
+                                <p>Focus on retirement income and wealth preservation strategies</p>
+                              </div>
+                            )}
+                            {selectedProspect.income >= 150000 && (
+                              <div className="flex items-start gap-2">
+                                <Target className="w-5 h-5 text-green-500 mt-1" />
+                                <p>Emphasize tax-advantaged investment options</p>
+                              </div>
+                            )}
+                            {selectedProspect.riskTolerance.toLowerCase() === 'conservative' && (
+                              <div className="flex items-start gap-2">
+                                <Target className="w-5 h-5 text-yellow-500 mt-1" />
+                                <p>Highlight guaranteed income features and principal protection</p>
+                              </div>
+                            )}
+                            {selectedProspect.familyStatus.toLowerCase().includes('kid') && (
+                              <div className="flex items-start gap-2">
+                                <Target className="w-5 h-5 text-purple-500 mt-1" />
+                                <p>Focus on family protection and education planning</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
