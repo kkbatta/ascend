@@ -19,10 +19,12 @@ export async function hashPassword(password: string) {
 
 async function comparePasswords(supplied: string, stored: string) {
   if (!stored || !stored.includes(".")) {
+    log(`Invalid stored password format: ${stored}`);
     return false;
   }
   const [hashed, salt] = stored.split(".");
   if (!hashed || !salt) {
+    log(`Missing hash or salt in stored password: ${stored}`);
     return false;
   }
   const hashedBuf = Buffer.from(hashed, "hex");
@@ -56,16 +58,21 @@ export async function setupAuth(app: Express) {
       try {
         const [user] = await db.select().from(users).where(eq(users.username, username));
         if (!user) {
+          log(`User not found: ${username}`);
           return done(null, false, { message: "Invalid username or password" });
         }
 
+        log(`Attempting login for user: ${username}`);
         const isValid = await comparePasswords(password, user.password);
         if (!isValid) {
+          log(`Invalid password for user: ${username}`);
           return done(null, false, { message: "Invalid username or password" });
         }
 
+        log(`Successful login for user: ${username}`);
         return done(null, user);
       } catch (err) {
+        log(`Login error: ${err}`);
         return done(err);
       }
     }),
