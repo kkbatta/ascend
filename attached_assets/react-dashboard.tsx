@@ -87,7 +87,6 @@ const Dashboard = () => {
   const [view, setView] = useState('recruiting');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
-  // Rest of your dashboard component code remains the same...
   const currentUser = {
     name: "Rajitha",
     role: "Team Lead",
@@ -267,9 +266,9 @@ const Dashboard = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Left Navigation */}
-      <div className="w-64 bg-white border-r shadow-sm">
-        <div className="p-4">
-          <AscendLogo width={160} height={80} />
+      <div className="w-72 bg-white border-r shadow-sm">
+        <div className="p-6">
+          <AscendLogo width={220} height={110} />
         </div>
         <nav className="mt-6">
           {navItems.map((item, index) => (

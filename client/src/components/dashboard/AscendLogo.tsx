@@ -1,10 +1,10 @@
 import React from 'react';
 
-export const AscendLogo = ({ width = 180, height = 90 }) => (
+export const AscendLogo = ({ width = 240, height = 120 }) => (
   <svg 
     width={width} 
     height={height} 
-    viewBox="0 0 400 200" 
+    viewBox="0 0 500 250" 
     className="logo-svg"
   >
     <defs>
@@ -61,7 +61,7 @@ export const AscendLogo = ({ width = 180, height = 90 }) => (
         ELEVATE
       </text>
       <text 
-        x="0" y="25" 
+        x="0" y="40" 
         fontFamily="Cinzel, serif" 
         fontSize="20" 
         fontWeight="600" 
