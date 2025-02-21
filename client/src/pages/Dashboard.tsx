@@ -162,12 +162,12 @@ const Dashboard = () => {
   const currentMetrics = hierarchyMetrics[activeTab];
 
   const currentUser = {
-    name: "Rajitha Perera",
-    role: "Senior Team Lead",
-    avatar: "/api/placeholder/40/40?text=RP",
-    teamSize: 45,
-    monthlyRevenue: 95000,
-    activeProspects: 12
+    name: "John Maxwell",
+    role: "National Marketing Director",
+    avatar: "/api/placeholder/40/40?text=JM",
+    teamSize: 5200,
+    monthlyRevenue: 8500000,
+    activeProspects: 145
   };
 
   const toggleExpand = (id: number) => {
