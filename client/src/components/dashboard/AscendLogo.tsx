@@ -62,8 +62,9 @@ export const AscendLogo = ({ width = 180, height = 90 }) => (
       </text>
       <text 
         x="0" y="25" 
-        fontFamily="Arial, sans-serif" 
+        fontFamily="Cinzel, serif" 
         fontSize="16" 
+        fontWeight="600" 
         fill="#6B7280"
       >
         Growing Stronger Together
