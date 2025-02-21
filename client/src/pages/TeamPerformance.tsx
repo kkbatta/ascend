@@ -103,6 +103,44 @@ const productDetails = {
   }
 };
 
+// Placeholder for insurance provider data (replace with your actual data)
+const insuranceProviders = {
+  'North American': {
+    'SecureHorizon': {
+      name: 'SecureHorizon',
+      features: ['Feature 1', 'Feature 2', 'Feature 3'],
+      minPremium: 10000,
+      targetAge: '55+',
+      riskLevel: 'Low',
+      fees: '1%',
+      returns: '3%'
+    }
+  },
+  'Athene': {
+    'Sunflower Annuity': {
+      name: 'Sunflower Annuity',
+      features: ['Feature A', 'Feature B', 'Feature C'],
+      minPremium: 5000,
+      targetAge: '35-50',
+      riskLevel: 'Medium',
+      fees: '0.75%',
+      returns: '4%'
+    }
+  },
+  'Nationwide': {
+    'Prolife IUL': {
+      name: 'Prolife IUL',
+      features: ['Feature X', 'Feature Y', 'Feature Z'],
+      minPremium: 15000,
+      targetAge: '30-45',
+      riskLevel: 'High',
+      fees: '1.25%',
+      returns: '5%'
+    }
+  }
+};
+
+
 const TeamPerformance = () => {
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -174,7 +212,7 @@ const TeamPerformance = () => {
 
       // Enhanced Family Status considerations
       if (prospect.familyStatus.toLowerCase().includes('kid') ||
-          prospect.familyStatus.toLowerCase().includes('expecting')) {
+        prospect.familyStatus.toLowerCase().includes('expecting')) {
         if (product === 'Prolife IUL') {
           sellingPoints.push(
             `As a family person with ${prospect.familyStatus}, our living benefits ensure comprehensive protection for your loved ones.`,
@@ -210,8 +248,8 @@ const TeamPerformance = () => {
 
       // Enhanced Portfolio Alignment
       if (prospect.currentInvestments.some(inv =>
-          inv.toLowerCase().includes('401k') ||
-          inv.toLowerCase().includes('pension'))) {
+        inv.toLowerCase().includes('401k') ||
+        inv.toLowerCase().includes('pension'))) {
         sellingPoints.push(
           `This product perfectly complements your existing ${prospect.currentInvestments.join(', ')} portfolio.`,
           `You'll benefit from additional tax advantages beyond your current retirement accounts.`,
@@ -221,7 +259,7 @@ const TeamPerformance = () => {
 
       // Enhanced Occupation-specific recommendations
       if (prospect.occupation.toLowerCase().includes('business') ||
-          prospect.occupation.toLowerCase().includes('entrepreneur')) {
+        prospect.occupation.toLowerCase().includes('entrepreneur')) {
         sellingPoints.push(
           `As a ${prospect.occupation}, you'll appreciate our flexible premium payment schedule that accommodates variable income streams.`,
           `This product can be integrated into your business succession planning strategy.`,
@@ -233,6 +271,32 @@ const TeamPerformance = () => {
     });
 
     return points;
+  };
+
+  const generateProductComparison = (selectedProducts: string[]) => {
+    const comparisons: Record<string, any> = {};
+
+    selectedProducts.forEach(product => {
+      const [provider, type] = Object.entries(insuranceProviders).find(([_, products]) =>
+        Object.keys(products).includes(product)
+      ) || [];
+
+      if (provider && type) {
+        const productInfo = insuranceProviders[provider][type];
+        comparisons[product] = {
+          provider,
+          name: productInfo.name,
+          features: productInfo.features,
+          minPremium: productInfo.minPremium,
+          targetAge: productInfo.targetAge,
+          riskLevel: productInfo.riskLevel,
+          fees: productInfo.fees,
+          returns: productInfo.returns
+        };
+      }
+    });
+
+    return comparisons;
   };
 
   return (
@@ -357,7 +421,6 @@ const TeamPerformance = () => {
                 )}
 
                 <div className="grid grid-cols-1 gap-6">
-                  {/* Target Audience Comparison */}
                   <Card>
                     <CardHeader>
                       <CardTitle>Target Audience Analysis</CardTitle>
@@ -381,7 +444,6 @@ const TeamPerformance = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Pros and Cons Comparison */}
                   <Card>
                     <CardHeader>
                       <CardTitle>Pros & Cons Analysis</CardTitle>
@@ -419,7 +481,6 @@ const TeamPerformance = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Ideal Customer Profile */}
                   <Card>
                     <CardHeader>
                       <CardTitle>Ideal Customer Profile</CardTitle>
