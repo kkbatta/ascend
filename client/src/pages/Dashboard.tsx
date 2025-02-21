@@ -163,7 +163,7 @@ const Dashboard = () => {
 
   const currentUser = {
     name: "John Maxwell",
-    role: "National Marketing Director",
+    role: "Chief Executive Officer",
     avatar: "/api/placeholder/40/40?text=JM",
     teamSize: 5200,
     monthlyRevenue: 8500000,
