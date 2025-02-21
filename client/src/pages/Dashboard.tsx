@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Avatar } from '@/components/ui/avatar';
@@ -6,14 +6,53 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Users, Search, DollarSign, BarChart3, LinkIcon,
-  ChevronRight, ChevronDown, ArrowUpRight
+  ChevronRight, ChevronDown, ArrowUpRight, Filter
 } from 'lucide-react';
 import { hierarchyMetrics, hierarchyData, currentUser } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
-const OrgNode = ({ data, view, level = 0 }: { data: any; view: 'recruiting' | 'production'; level: number }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+// Helper function to check if a node or its descendants match the filter
+const nodeMatchesFilter = (node: any, titleFilter: string): boolean => {
+  if (!titleFilter) return true;
+  if (node.rank.toLowerCase().includes(titleFilter.toLowerCase())) return true;
+  if (node.children) {
+    return node.children.some((child: any) => nodeMatchesFilter(child, titleFilter));
+  }
+  return false;
+};
+
+// Helper function to get path to root
+const getPathToRoot = (node: any, targetId: number, path: any[] = []): any[] | null => {
+  if (node.id === targetId) {
+    return [...path, node];
+  }
+  if (node.children) {
+    for (const child of node.children) {
+      const result = getPathToRoot(child, targetId, [...path, node]);
+      if (result) return result;
+    }
+  }
+  return null;
+};
+
+const OrgNode = ({ 
+  data, 
+  view, 
+  level = 0,
+  titleFilter,
+  expandedNodes,
+  onToggleExpand
+}: { 
+  data: any; 
+  view: 'recruiting' | 'production'; 
+  level: number;
+  titleFilter: string;
+  expandedNodes: Set<number>;
+  onToggleExpand: (id: number) => void;
+}) => {
   const hasChildren = data.children && data.children.length > 0;
+  const isExpanded = expandedNodes.has(data.id);
+  const shouldShow = !titleFilter || nodeMatchesFilter(data, titleFilter);
 
   const getBgColor = () => {
     switch (data.rank) {
@@ -25,11 +64,11 @@ const OrgNode = ({ data, view, level = 0 }: { data: any; view: 'recruiting' | 'p
     }
   };
 
+  if (!shouldShow && !hasChildren) return null;
+
   return (
     <div className="relative">
-      {/* Node */}
       <div className={`relative flex flex-col ${level > 0 ? 'ml-12 mt-2' : ''}`}>
-        {/* Connector Lines */}
         {level > 0 && (
           <>
             <div className="absolute left-[-24px] top-[24px] w-6 h-[1px] bg-gray-300" />
@@ -37,12 +76,14 @@ const OrgNode = ({ data, view, level = 0 }: { data: any; view: 'recruiting' | 'p
           </>
         )}
 
-        {/* Node Content */}
         <div className={`flex items-center p-2 rounded-lg border ${getBgColor()} hover:shadow-sm transition-all duration-200 max-w-md`}>
           <div className="flex items-center flex-1 min-w-0">
             {hasChildren && (
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleExpand(data.id);
+                }}
                 className="mr-2 p-1 rounded hover:bg-white/50"
               >
                 {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -93,15 +134,17 @@ const OrgNode = ({ data, view, level = 0 }: { data: any; view: 'recruiting' | 'p
           </div>
         </div>
 
-        {/* Children */}
         {hasChildren && isExpanded && (
           <div className="pl-12 relative">
-            {data.children.map((child: any, index: number) => (
+            {data.children.map((child: any) => (
               <OrgNode
                 key={child.id}
                 data={child}
                 view={view}
                 level={level + 1}
+                titleFilter={titleFilter}
+                expandedNodes={expandedNodes}
+                onToggleExpand={onToggleExpand}
               />
             ))}
           </div>
@@ -114,8 +157,35 @@ const OrgNode = ({ data, view, level = 0 }: { data: any; view: 'recruiting' | 'p
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [view, setView] = useState('recruiting');
+  const [titleFilter, setTitleFilter] = useState('');
+  const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const currentMetrics = hierarchyMetrics[activeTab];
+
+  const toggleExpand = (id: number) => {
+    setExpandedNodes(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Initialize expanded state for visible nodes
+  React.useEffect(() => {
+    const initialExpanded = new Set<number>();
+    const initializeExpanded = (node: any) => {
+      if (node.children) {
+        initialExpanded.add(node.id);
+        node.children.forEach(initializeExpanded);
+      }
+    };
+    hierarchyData[activeTab].forEach(initializeExpanded);
+    setExpandedNodes(initialExpanded);
+  }, [activeTab]);
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}/register?ref=${currentUser.id}`);
@@ -124,6 +194,9 @@ const Dashboard = () => {
       description: "Share this link with your prospects to grow your team.",
     });
   };
+
+  // Available ranks for filtering
+  const ranks = ['NMD', 'SMD', 'RMD', 'EFC', 'TA'];
 
   return (
     <div className="p-6">
@@ -135,6 +208,21 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Title Filter Dropdown */}
+            <div className="relative">
+              <select
+                value={titleFilter}
+                onChange={(e) => setTitleFilter(e.target.value)}
+                className="pl-4 pr-8 py-2 border rounded-lg appearance-none bg-white"
+              >
+                <option value="">All Titles</option>
+                {ranks.map(rank => (
+                  <option key={rank} value={rank}>{rank}</option>
+                ))}
+              </select>
+              <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            </div>
+
             <Button
               variant="outline"
               size="sm"
@@ -233,6 +321,9 @@ const Dashboard = () => {
                   data={item}
                   view={view}
                   level={0}
+                  titleFilter={titleFilter}
+                  expandedNodes={expandedNodes}
+                  onToggleExpand={toggleExpand}
                 />
               ))}
             </div>
