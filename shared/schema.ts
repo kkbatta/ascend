@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull(),
   fullName: text("full_name").notNull(),
+  role: text("role").notNull().default("user"), // Added role field
   dateOfBirth: timestamp("date_of_birth").notNull(),
   aboutMe: text("about_me"),
   membershipPaid: boolean("membership_paid").default(false),
@@ -27,11 +28,13 @@ export const insertUserSchema = createInsertSchema(users)
     aboutMe: true,
     referralCode: true,
     referredBy: true,
+    role: true, // Added role field
   })
   .extend({
     email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     dateOfBirth: z.string().transform((str) => new Date(str)),
+    role: z.enum(["admin", "super_admin", "user"]), // Added role validation
   });
 
 export const orgMembers = pgTable("org_members", {
