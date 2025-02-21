@@ -1,15 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Users, Search, DollarSign, BarChart3, LinkIcon,
-  ChevronRight, ChevronDown, ArrowUpRight, Filter
+  ChevronRight, ChevronDown, ArrowUpRight
 } from 'lucide-react';
 import { hierarchyMetrics, hierarchyData } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
+
+// Helper function to get initials
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase();
+};
 
 // Helper function to check if a node or its descendants match the filter
 const nodeMatchesFilter = (node: any, titleFilter: string): boolean => {
@@ -91,7 +100,8 @@ const OrgNode = ({
             )}
 
             <Avatar className="w-8 h-8 ring-2 ring-offset-2 ring-blue-500">
-              <img src={data.avatarUrl} alt={data.name} />
+              <AvatarImage src={data.avatarUrl} alt={data.name} />
+              <AvatarFallback>{getInitials(data.name)}</AvatarFallback>
             </Avatar>
 
             <div className="ml-3 min-w-0 flex-1">
@@ -183,7 +193,7 @@ const Dashboard = () => {
   };
 
   // Initialize expanded state for visible nodes
-  React.useEffect(() => {
+  useEffect(() => {
     const initialExpanded = new Set<number>();
     const initializeExpanded = (node: any) => {
       if (node.children) {
@@ -194,7 +204,6 @@ const Dashboard = () => {
     hierarchyData[activeTab].forEach(initializeExpanded);
     setExpandedNodes(initialExpanded);
   }, [activeTab]);
-
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}/register?ref=${currentUser.name}`);
@@ -217,7 +226,8 @@ const Dashboard = () => {
             {/* User Profile Section */}
             <div className="flex items-center gap-3 bg-white p-3 rounded-xl border shadow-sm">
               <Avatar className="h-10 w-10 border-2 border-blue-500">
-                <img src={currentUser.avatar} alt={currentUser.name} />
+                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="font-medium text-sm">{currentUser.name}</h3>
