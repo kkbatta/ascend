@@ -18,51 +18,67 @@ const TreeNode = ({ item, view, level = 0 }: { item: any; view: 'recruiting' | '
 
   return (
     <div className="relative">
-      <div className={`flex items-center ${level > 0 ? 'ml-8 mt-2' : ''}`}>
+      <div className="ml-6 py-1">
+        {/* Vertical connection line to parent */}
         {level > 0 && (
-          <div className="absolute left-0 top-1/2 w-6 h-px bg-gray-300" />
+          <div className="absolute left-[-12px] top-0 h-full w-[1px] bg-gray-200" />
         )}
-        <div className="flex-1 flex items-center p-2 rounded-lg hover:bg-gray-50">
+        {/* Horizontal connection line */}
+        {level > 0 && (
+          <div className="absolute left-[-12px] top-[50%] w-3 h-[1px] bg-gray-200" />
+        )}
+
+        {/* Node content */}
+        <div className="flex items-center bg-white rounded-lg border border-gray-100 p-2 hover:shadow-sm transition-all duration-200">
           {hasChildren && (
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="mr-2 text-gray-500 hover:text-gray-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+              className="mr-2 p-1 hover:bg-gray-100 rounded"
             >
-              {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
           )}
-          <Avatar className="w-8 h-8 ring-1 ring-offset-1 ring-blue-500">
+
+          <Avatar className="w-6 h-6 mr-2">
             <img src={item.avatarUrl} alt={item.name} />
           </Avatar>
-          <div className="ml-3 min-w-0">
+
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium truncate">{item.name}</span>
-              <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs">
+              <Badge variant="secondary" className="text-xs px-1">
                 {item.rank}
               </Badge>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>{item.location}</span>
+            <div className="flex items-center text-xs text-gray-500 mt-0.5">
+              <span className="truncate">{item.location}</span>
               {view === 'recruiting' ? (
-                <Badge variant="outline" className="bg-green-50 text-green-700">
-                  {item.rv} RV ({item.recruits} recruits)
+                <Badge variant="outline" className="ml-2 text-xs">
+                  {item.rv} RV • {item.recruits} recruits
                 </Badge>
               ) : (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                  ${item.production.toLocaleString()} ({item.teamSize} team)
+                <Badge variant="outline" className="ml-2 text-xs">
+                  ${item.production.toLocaleString()} • {item.teamSize} team
                 </Badge>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Children */}
       {hasChildren && isExpanded && (
-        <div className="relative">
+        <div className="ml-6">
           {item.children.map((child: any, index: number) => (
-            <div key={child.id} className="relative">
-              {index > 0 && <div className="absolute left-7 top-0 w-px h-full bg-gray-300" />}
-              <TreeNode item={child} view={view} level={level + 1} />
-            </div>
+            <TreeNode
+              key={child.id}
+              item={child}
+              view={view}
+              level={level + 1}
+            />
           ))}
         </div>
       )}
@@ -75,34 +91,20 @@ const Dashboard = () => {
   const [view, setView] = useState('recruiting');
   const { toast } = useToast();
 
-  const isHierarchyTab = activeTab !== 'performance';
-  const currentMetrics = isHierarchyTab ? hierarchyMetrics[activeTab as keyof typeof hierarchyMetrics] : null;
-
   const copyReferralLink = () => {
-    const referralLink = `${window.location.origin}/register?ref=${currentUser.referralCode}`;
-    navigator.clipboard.writeText(referralLink);
+    navigator.clipboard.writeText(`${window.location.origin}/register?ref=${currentUser.id}`);
     toast({
       title: "Referral link copied!",
       description: "Share this link with your prospects to grow your team.",
     });
   };
 
-  // Transform flat data into hierarchical structure
-  const buildHierarchy = (data: any[], parentId: number | null = null): any[] => {
-    return data
-      .filter(item => item.parentId === parentId)
-      .map(item => ({
-        ...item,
-        children: buildHierarchy(data, item.id)
-      }));
-  };
-
   return (
     <div className="p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Team Hierarchy</h1>
+            <h1 className="text-2xl font-bold mb-1">Team Hierarchy</h1>
             <p className="text-gray-500">View and manage your team structure</p>
           </div>
           <div className="flex items-center gap-4">
@@ -110,15 +112,15 @@ const Dashboard = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 border rounded-xl w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Search members..."
+                className="pl-10 pr-4 py-2 border rounded-lg w-64"
               />
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2"
               onClick={copyReferralLink}
+              className="flex items-center gap-2"
             >
               <LinkIcon size={16} />
               <span>Share Referral</span>
@@ -126,42 +128,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {isHierarchyTab && currentMetrics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <MetricsCard
-              title="Total Team Size"
-              value={currentMetrics.teamSize.toLocaleString()}
-              icon={<Users className="w-6 h-6 text-blue-500" />}
-              trend={12}
-            />
-            <MetricsCard
-              title="Monthly Revenue"
-              value={`$${currentMetrics.monthlyRevenue.toLocaleString()}`}
-              icon={<DollarSign className="w-6 h-6 text-green-500" />}
-              trend={8}
-            />
-            <MetricsCard
-              title="New Recruits"
-              value={currentMetrics.newRecruits.toLocaleString()}
-              icon={<Users className="w-6 h-6 text-purple-500" />}
-              trend={15}
-            />
-            <MetricsCard
-              title="Team Production"
-              value={`$${currentMetrics.teamProduction.toLocaleString()}`}
-              icon={<BarChart3 className="w-6 h-6 text-orange-500" />}
-              trend={10}
-            />
-          </div>
-        )}
-
-        <Card>
+        <Card className="mb-6">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-lg mb-1">Organization Structure</CardTitle>
-                <p className="text-gray-500 text-sm">Hierarchical view of your team</p>
-              </div>
+              <CardTitle className="text-lg">Organization Structure</CardTitle>
               <div className="flex gap-2">
                 <Button
                   variant={view === 'recruiting' ? 'default' : 'outline'}
