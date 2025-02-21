@@ -114,14 +114,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Find John Maxwell (CEO) by name
+        // Find John Maxwell (CEO) by name - simplified query
         const [ceo] = await db
-          .select({
-            userId: users.id,
-            memberId: orgMembers.id
-          })
+          .select()
           .from(orgMembers)
-          .innerJoin(users, eq(users.id, orgMembers.id))
           .where(eq(orgMembers.name, 'John Maxwell'))
           .limit(1);
 
@@ -137,12 +133,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           compensationPercentage: 5.0,
           yearlyIncome: 0,
           level: 2, // John Maxwell is level 1, all others are level 2 for now
-          parentId: ceo.memberId
+          parentId: ceo.id
         });
 
-        // Update user with CEO's user ID as referrer
+        // Update user with CEO's ID as referrer
         await storage.updateUser(user.id, {
-          referredBy: ceo.userId
+          referredBy: ceo.id
         });
 
         // Generate referral code
