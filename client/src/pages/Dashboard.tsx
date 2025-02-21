@@ -8,7 +8,7 @@ import {
   Users, Search, DollarSign, BarChart3, LinkIcon,
   ChevronRight, ChevronDown, ArrowUpRight, Filter
 } from 'lucide-react';
-import { hierarchyMetrics, hierarchyData, currentUser } from '@/lib/mock-data';
+import { hierarchyMetrics, hierarchyData } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 
 // Helper function to check if a node or its descendants match the filter
@@ -35,16 +35,16 @@ const getPathToRoot = (node: any, targetId: number, path: any[] = []): any[] | n
   return null;
 };
 
-const OrgNode = ({ 
-  data, 
-  view, 
+const OrgNode = ({
+  data,
+  view,
   level = 0,
   titleFilter,
   expandedNodes,
   onToggleExpand
-}: { 
-  data: any; 
-  view: 'recruiting' | 'production'; 
+}: {
+  data: any;
+  view: 'recruiting' | 'production';
   level: number;
   titleFilter: string;
   expandedNodes: Set<number>;
@@ -99,10 +99,10 @@ const OrgNode = ({
                 <span className="font-medium text-sm truncate">{data.name}</span>
                 <Badge variant="secondary" className={`text-xs ${
                   data.rank === 'NMD' ? 'bg-purple-100 text-purple-700' :
-                  data.rank === 'SMD' ? 'bg-blue-100 text-blue-700' :
-                  data.rank === 'RMD' ? 'bg-green-100 text-green-700' :
-                  data.rank === 'EFC' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-gray-100 text-gray-700'
+                    data.rank === 'SMD' ? 'bg-blue-100 text-blue-700' :
+                      data.rank === 'RMD' ? 'bg-green-100 text-green-700' :
+                        data.rank === 'EFC' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
                 }`}>
                   {data.rank}
                 </Badge>
@@ -157,10 +157,18 @@ const OrgNode = ({
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [view, setView] = useState('recruiting');
-  const [titleFilter, setTitleFilter] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const currentMetrics = hierarchyMetrics[activeTab];
+
+  const currentUser = {
+    name: "Rajitha Perera",
+    role: "Senior Team Lead",
+    avatar: "/api/placeholder/40/40?text=RP",
+    teamSize: 45,
+    monthlyRevenue: 95000,
+    activeProspects: 12
+  };
 
   const toggleExpand = (id: number) => {
     setExpandedNodes(prev => {
@@ -187,16 +195,14 @@ const Dashboard = () => {
     setExpandedNodes(initialExpanded);
   }, [activeTab]);
 
+
   const copyReferralLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/register?ref=${currentUser.id}`);
+    navigator.clipboard.writeText(`${window.location.origin}/register?ref=${currentUser.name}`);
     toast({
       title: "Referral link copied!",
       description: "Share this link with your prospects to grow your team.",
     });
   };
-
-  // Available ranks for filtering
-  const ranks = ['NMD', 'SMD', 'RMD', 'EFC', 'TA'];
 
   return (
     <div className="p-6">
@@ -208,19 +214,23 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Title Filter Dropdown */}
-            <div className="relative">
-              <select
-                value={titleFilter}
-                onChange={(e) => setTitleFilter(e.target.value)}
-                className="pl-4 pr-8 py-2 border rounded-lg appearance-none bg-white"
-              >
-                <option value="">All Titles</option>
-                {ranks.map(rank => (
-                  <option key={rank} value={rank}>{rank}</option>
-                ))}
-              </select>
-              <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            {/* User Profile Section */}
+            <div className="flex items-center gap-3 bg-white p-3 rounded-xl border shadow-sm">
+              <Avatar className="h-10 w-10 border-2 border-blue-500">
+                <img src={currentUser.avatar} alt={currentUser.name} />
+              </Avatar>
+              <div>
+                <h3 className="font-medium text-sm">{currentUser.name}</h3>
+                <p className="text-xs text-gray-500">{currentUser.role}</p>
+              </div>
+              <div className="border-l pl-3 ml-3">
+                <div className="text-xs text-gray-500">Team Size</div>
+                <div className="font-medium">{currentUser.teamSize}</div>
+              </div>
+              <div className="border-l pl-3">
+                <div className="text-xs text-gray-500">Monthly Revenue</div>
+                <div className="font-medium">${currentUser.monthlyRevenue.toLocaleString()}</div>
+              </div>
             </div>
 
             <Button
@@ -321,7 +331,7 @@ const Dashboard = () => {
                   data={item}
                   view={view}
                   level={0}
-                  titleFilter={titleFilter}
+                  titleFilter={''}
                   expandedNodes={expandedNodes}
                   onToggleExpand={toggleExpand}
                 />
