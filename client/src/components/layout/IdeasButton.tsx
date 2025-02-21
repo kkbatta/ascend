@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Lightbulb, Check, Loader2, Bot, Send, Plus, Trash2 } from 'lucide-react';
+import { Lightbulb, Check, Loader2, Bot, Send, Plus, Trash2, Code } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Default page-specific enhancement ideas
+// Update defaultIdeas with enhanced ideas
 const defaultIdeas = {
   '/golden-era': [
     'Enable multi-policy income planning simulation',
@@ -28,7 +28,12 @@ const defaultIdeas = {
     'Create spouse coverage gap analysis',
     'Implement policy performance benchmarking',
     'Add retirement income distribution modeling',
-    'Create legacy planning visualization tools'
+    'Create legacy planning visualization tools',
+    'AI-powered risk assessment dashboard',
+    'Real-time policy performance monitoring',
+    'Automated beneficiary updates system',
+    'Multi-currency support for international clients',
+    'Advanced tax optimization calculator'
   ],
   '/business': [
     'Add business metrics dashboard customization',
@@ -74,31 +79,26 @@ const defaultIdeas = {
     'Create commission statement generator',
     'Add commission plan comparison tools',
     'Implement historical commission analysis',
-    'Create commission rule impact simulator'
+    'Create commission rule impact simulator',
+    'AI-driven commission optimization',
+    'Real-time commission tracking dashboard',
+    'Team performance predictor',
+    'Commission structure analyzer'
   ]
 };
 
-const fetchIdeas = async (pagePath: string) => {
-  const response = await fetch(`/api/ideas?pagePath=${pagePath}`);
-  if (!response.ok) throw new Error('Failed to fetch ideas');
-  return response.json();
-};
-
-const addIdea = async (idea: { pagePath: string; content: string }) => {
-  const response = await fetch('/api/ideas', {
+// Keep existing API functions and add implementation function
+const generateImplementation = async (idea: string, context: string, apiKey: string) => {
+  const response = await fetch('/api/generate-code', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(idea),
+    headers: {
+      'Content-Type': 'application/json',
+      'x-openai-key': apiKey
+    },
+    body: JSON.stringify({ idea, context }),
   });
-  if (!response.ok) throw new Error('Failed to add idea');
+  if (!response.ok) throw new Error('Failed to generate implementation');
   return response.json();
-};
-
-const deleteIdea = async (id: number) => {
-  const response = await fetch(`/api/ideas/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) throw new Error('Failed to delete idea');
 };
 
 export const IdeasButton = () => {
@@ -106,6 +106,10 @@ export const IdeasButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [newIdea, setNewIdea] = useState('');
+  const [openAIKey, setOpenAIKey] = useState('');
+  const [implementationDialogOpen, setImplementationDialogOpen] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -153,6 +157,42 @@ export const IdeasButton = () => {
       });
     },
   });
+
+  const implementationMutation = useMutation({
+    mutationFn: ({ idea, context, apiKey }: { idea: string; context: string; apiKey: string }) =>
+      generateImplementation(idea, context, apiKey),
+    onSuccess: (data) => {
+      toast({
+        title: "Implementation generated",
+        description: "Check the implementation details in the dialog.",
+      });
+      // Here you could handle the implementation data, e.g., show it in a new dialog
+      console.log('Implementation:', data);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to generate implementation",
+        description: "Please check your OpenAI API key and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleImplementation = async () => {
+    if (!selectedIdea || !openAIKey) return;
+
+    setIsGenerating(true);
+    try {
+      await implementationMutation.mutateAsync({
+        idea: selectedIdea,
+        context: location,
+        apiKey: openAIKey
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
 
   // Load checked state from localStorage on mount
   useEffect(() => {
@@ -229,16 +269,29 @@ export const IdeasButton = () => {
                   >
                     {idea.content}
                   </label>
-                  {idea.isCustom && (
+                  <div className="flex gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0"
-                      onClick={() => deleteIdeaMutation.mutate(idea.id)}
+                      onClick={() => {
+                        setSelectedIdea(idea.content);
+                        setImplementationDialogOpen(true);
+                      }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Code className="h-4 w-4" />
                     </Button>
-                  )}
+                    {idea.isCustom && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => deleteIdeaMutation.mutate(idea.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -256,6 +309,72 @@ export const IdeasButton = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={implementationDialogOpen} onOpenChange={setImplementationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Implement Enhancement</DialogTitle>
+            <DialogDescription>
+              Enter your OpenAI API key to generate implementation code for this enhancement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2">Selected Idea:</h4>
+              <p className="text-sm">{selectedIdea}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium">OpenAI API Key</label>
+              <Input
+                type="password"
+                value={openAIKey}
+                onChange={(e) => setOpenAIKey(e.target.value)}
+                placeholder="sk-..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleImplementation}
+              disabled={!openAIKey || isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Code className="h-4 w-4 mr-2" />
+                  Generate Implementation
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
+};
+const fetchIdeas = async (pagePath: string) => {
+  const response = await fetch(`/api/ideas?pagePath=${pagePath}`);
+  if (!response.ok) throw new Error('Failed to fetch ideas');
+  return response.json();
+};
+
+const addIdea = async (idea: { pagePath: string; content: string }) => {
+  const response = await fetch('/api/ideas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(idea),
+  });
+  if (!response.ok) throw new Error('Failed to add idea');
+  return response.json();
+};
+
+const deleteIdea = async (id: number) => {
+  const response = await fetch(`/api/ideas/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete idea');
 };

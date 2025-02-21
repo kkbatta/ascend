@@ -19,6 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { idea, context } = req.body;
 
       // Initialize OpenAI client with the provided API key
+      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
       const openai = new OpenAI({ apiKey });
 
       // Create a prompt for code generation
@@ -48,11 +49,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "system", content: prompt }],
         response_format: { type: "json_object" }
       });
 
-      // Parse the response and apply changes
+      // Parse the response and return
       const result = JSON.parse(response.choices[0].message.content ?? '{}');
       res.json(result);
     } catch (error) {
