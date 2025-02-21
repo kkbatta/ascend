@@ -25,7 +25,7 @@ app.post('/api/admin/shutdown', (req, res) => {
   }, 1000);
 });
 
-// Add CORS middleware for production
+// Enhanced CORS middleware for production
 app.use((req, res, next) => {
   if (isShuttingDown) {
     res.status(503).json({ message: 'Service is shutting down' });
@@ -33,14 +33,20 @@ app.use((req, res, next) => {
   }
 
   const allowedOrigins = [
-    'https://[your-repl-name].[your-username].repl.co',
     process.env.CUSTOM_DOMAIN,
+    process.env.REPLIT_DOMAIN,
+    'https://ascendagentsea.yourdomain.com', // This will be replaced with your actual domain
+    ...((process.env.ADDITIONAL_DOMAINS || '').split(',').filter(Boolean))
   ].filter(Boolean);
 
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (process.env.NODE_ENV === 'development') {
+    // In development, be more permissive
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -95,7 +101,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const PORT = process.env.PORT || 5000;
+  const PORT = Number(process.env.PORT) || 5000;
   server.listen(PORT, () => {
     log(`Server running in ${app.get("env")} mode on port ${PORT}`);
   });
