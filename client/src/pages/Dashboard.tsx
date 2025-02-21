@@ -13,9 +13,51 @@ import {
 } from 'lucide-react';
 
 import { MetricsCard } from '@/components/dashboard/MetricsCard';
-import { LeaderboardItem } from '@/components/dashboard/LeaderboardItem';
+import { Badge } from '@/components/ui/badge'; // Assuming Badge component exists
 import { hierarchyMetrics, hierarchyData, currentUser, teamMemberStats, achievements } from '@/lib/mock-data';
 import { GamifiedLeaderboard } from '@/components/dashboard/GamifiedLeaderboard';
+
+const LeaderboardItem = ({ item, view }: { item: any, view: 'recruiting' | 'production' }) => (
+  <div className="bg-white rounded-lg border border-gray-100 p-3 hover:shadow-sm transition-all duration-200">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Avatar className="w-8 h-8 ring-1 ring-offset-1 ring-blue-500">
+          <img src={item.avatarUrl} alt={item.name} />
+        </Avatar>
+        <div>
+          <div className="flex items-center gap-1">
+            <p className="font-medium text-sm">{item.name}</p>
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs px-1.5">
+              {item.rank}
+            </Badge>
+          </div>
+          <p className="text-xs text-gray-500">{item.location}</p>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1">
+        {view === 'recruiting' ? (
+          <>
+            <Badge variant="success" className="bg-green-500 text-white text-xs px-2">
+              {item.rv} RV
+            </Badge>
+            <span className="text-xs text-gray-600">
+              {item.recruits} Recruits
+            </span>
+          </>
+        ) : (
+          <>
+            <Badge variant="success" className="bg-blue-500 text-white text-xs px-2">
+              ${item.production.toLocaleString()}
+            </Badge>
+            <span className="text-xs text-gray-600">
+              Team: {item.teamSize}
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+);
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -35,9 +77,8 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
@@ -72,9 +113,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Metrics Grid - Only show for hierarchy tabs */}
         {isHierarchyTab && currentMetrics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <MetricsCard
               title="Total Team Size"
               value={currentMetrics.teamSize.toLocaleString()}
@@ -102,43 +142,36 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Leaderboard */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-xl mb-2">HGI Builder Leaderboard</CardTitle>
+                <CardTitle className="text-lg mb-1">HGI Builder Leaderboard</CardTitle>
                 <p className="text-gray-500 text-sm">Track your team's performance and rankings</p>
               </div>
               {isHierarchyTab && (
-                <div className="flex gap-4">
-                  <button
-                    className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                      view === 'recruiting'
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
+                <div className="flex gap-2">
+                  <Button
+                    variant={view === 'recruiting' ? 'default' : 'outline'}
+                    size="sm"
                     onClick={() => setView('recruiting')}
                   >
                     Recruiting
-                  </button>
-                  <button
-                    className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                      view === 'production'
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
+                  </Button>
+                  <Button
+                    variant={view === 'production' ? 'default' : 'outline'}
+                    size="sm"
                     onClick={() => setView('production')}
                   >
                     Production
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-6">
+              <TabsList className="mb-4">
                 <TabsTrigger value="personal">Personal</TabsTrigger>
                 <TabsTrigger value="baseShop">Base Shop</TabsTrigger>
                 <TabsTrigger value="rmdBase">RMD Base Shop</TabsTrigger>
@@ -148,7 +181,7 @@ const Dashboard = () => {
 
               {isHierarchyTab ? (
                 <TabsContent value={activeTab}>
-                  <div className="space-y-4">
+                  <div className="grid gap-2">
                     {hierarchyData[activeTab as keyof typeof hierarchyData].map((item) => (
                       <LeaderboardItem key={item.id} item={item} view={view as 'recruiting' | 'production'} />
                     ))}
