@@ -61,13 +61,22 @@ export const AscendLogo = ({ width = 240, height = 120 }) => (
         ELEVATE
       </text>
       <text 
-        x="0" y="40" 
+        x="0" y="35" 
         fontFamily="Cinzel, serif" 
         fontSize="20" 
         fontWeight="600" 
         fill="#6B7280"
       >
-        Growing Stronger Together
+        Growing Stronger
+      </text>
+      <text 
+        x="0" y="60" 
+        fontFamily="Cinzel, serif" 
+        fontSize="20" 
+        fontWeight="600" 
+        fill="#6B7280"
+      >
+        Together
       </text>
     </g>
   </svg>
