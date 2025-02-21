@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,13 +68,23 @@ const ProspectDashboard = () => {
     ][i]}`
   }));
 
+  // Helper function to get initials
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
+  };
+
   const ProspectCard = ({ prospect, stageColor, stageTextColor }) => (
     <Card className="mb-4 hover:shadow-lg transition-all cursor-pointer border-l-4">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="w-10 h-10">
-              <img src={prospect.avatar} alt={prospect.name} />
+              <AvatarImage src={prospect.avatar} alt={prospect.name} />
+              <AvatarFallback>{getInitials(prospect.name)}</AvatarFallback>
             </Avatar>
             <div>
               <h3 className="font-semibold flex items-center gap-2">
