@@ -22,6 +22,7 @@ import {
 import { AscendLogo } from '@/components/dashboard/AscendLogo';
 import { currentUser } from '@/lib/mock-data';
 import { IdeasButton } from './IdeasButton';
+import { useAuth } from '@/hooks/use-auth';
 
 const iconComponents = {
   BarChart3,
@@ -58,7 +59,17 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { logoutMutation } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      setLocation('/auth');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -99,9 +110,17 @@ export const Layout = ({ children }: LayoutProps) => {
               <Settings size={20} />
               {!isCollapsed && <span>Settings</span>}
             </button>
-            <button className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 w-full">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 w-full"
+              disabled={logoutMutation.isPending}
+            >
               <LogOut size={20} />
-              {!isCollapsed && <span>Logout</span>}
+              {!isCollapsed && (
+                <span>
+                  {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                </span>
+              )}
             </button>
           </div>
         </nav>
