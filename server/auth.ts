@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { db } from "./db";
 import { User as SelectUser, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { log } from "./vite";
 
 const scryptAsync = promisify(scrypt);
 
@@ -17,7 +18,13 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  if (!stored || !stored.includes(".")) {
+    return false;
+  }
   const [hashed, salt] = stored.split(".");
+  if (!hashed || !salt) {
+    return false;
+  }
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
@@ -77,31 +84,56 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  // Initialize default admin users
-  const defaultAdmins = [
-    { username: "spandana", role: "admin" },
-    { username: "ramesh", role: "admin" },
-    { username: "shiva", role: "admin" },
-    { username: "crazyguy", role: "admin" },
-    { username: "kk", role: "super_admin" },
-  ];
-
-  for (const admin of defaultAdmins) {
-    const [existingUser] = await db
+  try {
+    // Check if any admin users exist
+    const existingAdmins = await db
       .select()
       .from(users)
-      .where(eq(users.username, admin.username));
+      .where(eq(users.role, "admin"))
+      .execute();
 
-    if (!existingUser) {
-      await db.insert(users).values({
-        username: admin.username,
-        password: await hashPassword("gobigorgohome"),
-        email: `${admin.username}@example.com`,
-        fullName: admin.username.charAt(0).toUpperCase() + admin.username.slice(1),
-        role: admin.role,
-        dateOfBirth: new Date("1990-01-01"),
-      });
+    const existingSuperAdmin = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, "super_admin"))
+      .execute();
+
+    // Only create default admins if none exist
+    if (existingAdmins.length === 0 && existingSuperAdmin.length === 0) {
+      log("No existing admin users found. Creating default admin users...");
+
+      const defaultAdmins = [
+        { username: "spandana", role: "admin" },
+        { username: "ramesh", role: "admin" },
+        { username: "shiva", role: "admin" },
+        { username: "crazyguy", role: "admin" },
+        { username: "kk", role: "super_admin" },
+      ];
+
+      for (const admin of defaultAdmins) {
+        try {
+          const hashedPassword = await hashPassword("gobigorgohome");
+          await db.insert(users).values({
+            username: admin.username,
+            password: hashedPassword,
+            email: `${admin.username}@example.com`,
+            fullName: admin.username.charAt(0).toUpperCase() + admin.username.slice(1),
+            role: admin.role,
+            dateOfBirth: new Date("1990-01-01"),
+          });
+          log(`Created admin user: ${admin.username}`);
+        } catch (error: any) {
+          log(`Error creating admin user ${admin.username}: ${error.message}`);
+          // Continue with next admin if one fails
+          continue;
+        }
+      }
+    } else {
+      log("Admin users already exist, skipping creation");
     }
+  } catch (error: any) {
+    log(`Error during admin user setup: ${error.message}`);
+    // Don't throw error, allow server to continue starting
   }
 
   app.post("/api/login", (req, res, next) => {
