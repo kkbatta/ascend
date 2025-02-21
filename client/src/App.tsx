@@ -13,6 +13,7 @@ import { ProspectAnalytics } from "@/components/prospects/ProspectAnalytics";
 import GoldenEra from "@/components/dashboard/GoldenEra";
 import Reports from "@/pages/Reports";
 import NotFound from "@/pages/not-found";
+import { FontPreview } from "@/components/dashboard/FontPreview";
 
 function Router() {
   return (
@@ -27,6 +28,7 @@ function Router() {
         <Route path="/prospects/analytics" component={ProspectAnalytics} />
         <Route path="/golden-era" component={GoldenEra} />
         <Route path="/reports" component={Reports} />
+        <Route path="/font-preview" component={FontPreview} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
